@@ -1,6 +1,4 @@
 
-
-```python
 INFINITY MERGED v7 - Web + WhatsApp - 3 Owners - 3x 1TB Backups - Changeable Prefix
 Owners: 0779798568 / Lord Infinity / Immortal Emperor - Password: 2164
 Deploy: GitHub -> Render -> Start: python3 main.py
