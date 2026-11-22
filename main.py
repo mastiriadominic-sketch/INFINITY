@@ -4,7 +4,7 @@ import json, random, os, time, datetime, copy
 from flask import Flask, request, jsonify
 
 OWNER_NAME = "Lord Infinity"
-OWNER_ID = "260779798568"  # 0779798568
+OWNER_ID = "260779798568"
 OWNER_PHONE = "0779798568"
 SECRET_PASSWORD = "2164"
 VERIFY_TOKEN = os.environ.get("VERIFY_TOKEN", "infinity123")
@@ -64,7 +64,6 @@ def get_player(pid,name="Player"):
         now=cat_now()
         DB["players"][pid]={"id":pid,"name":name,"displayName":name,"registered":False,"race":"Human","level":1,"exp":0,"zeni":1000000,"bank":0,"bank_open":False,"bank_opened_at":0,"bank_deposit_total":0,"last_bank_profit":0,"savings":0,"hp":100,"maxHp":100,"mp":50,"maxMp":50,"atk":15,"def":10,"spd":12,"agi":10,"con":10,"rank":"E - Novice","wins":0,"losses":0,"dungeonClears":0,"dungeon_floor":1,"checkpoint":1,"kills":0,"job":"Unemployed","loan":0,"loanDue":0,"house":"None","houseTier":0,"property":"None","car":"None","shop":"None","pet":None,"guild_permit":False,"guild":"None","guildRank":"None","lastDaily":0,"lastWork":0,"lastClaim":0,"lastRob":0,"jailed":0,"banned":False,"questsDone":0,"notifications":[],"gender":"Not Set","age":15,"lifespan":80,"birthday":now.strftime("%d %b %Y"),"used_codes":[],"spouse":None,"title":"Adventurer","titles":["Adventurer"],"emoji":"Sword","password":"","cultRealm":0,"cultLayer":1,"cultXp":0,"cultNeed":100,"talentType":"","talentValue":"","talentGrade":"","isInfinity":False,"isChosen":False,"chosenUntil":0,"wood":0,"houseBuilt":False,"sect":"No Sect","sectRank":"-","hunger":100,"family":"No Family","party":"No Party","church":"No Church"}
         WORLD["totalPlayers"]+=1
-    # fill missing
     defaults={"password":"","cultRealm":0,"cultLayer":1,"cultXp":0,"cultNeed":100,"talentType":"","talentValue":"","talentGrade":"","isInfinity":False,"isChosen":False,"chosenUntil":0,"wood":0,"houseBuilt":False,"sect":"No Sect","sectRank":"-","hunger":100,"family":"No Family","party":"No Party","church":"No Church"}
     for k,v in defaults.items():
         if k not in DB["players"][pid]: DB["players"][pid][k]=v
@@ -119,8 +118,29 @@ def use_move_in_dungeon(p,num):
         return box_str("YOU DIED",[f"Died on Floor {d['floor']}",f"Respawn at Checkpoint Floor {respawn}","HP set to 1"])
     save(); return "\n".join(out)+"\nYour turn! /moves <number> again"
 
+# --- NEW: APPLY RACE + GENDER + IMMORTAL EMPEROR PERKS ---
+def apply_register_details(p, race_raw, gender_raw):
+    pretty={"human":"Human","demon":"Demon","fairy":"Fairy","mage":"Mage","elf":"Elf","vampire":"Vampire","dragon":"Dragon","angel":"Angel","god":"God"}
+    if race_raw:
+        r=race_raw.lower()
+        if r in pretty:
+            if r=="god" and not is_owner(p["id"]) and p.get("displayName","").lower()!="infinity":
+                return "God only for Admins / Infinity"
+            p["race"]=pretty[r]
+    if gender_raw:
+        g=gender_raw.lower()
+        if g in ["male","female"]:
+            p["gender"]=g.capitalize()
+    # Immortal Emperor check - Infinity + God + male
+    if p.get("displayName","").lower()=="infinity" and p.get("race")=="God" and p.get("gender")=="Male":
+        p["isInfinity"]=True; p["isChosen"]=True; p["chosenUntil"]=time.time()+2*24*3600
+        p["race"]="God"; p["atk"]=100; p["maxHp"]=300; p["hp"]=300; p["mp"]=9999; p["maxMp"]=9999
+        p["cultRealm"]=1; p["cultLayer"]=9; p["talentType"]="Bloodline"; p["talentValue"]="Primordial Chaos Bloodline"; p["talentGrade"]="Divine Grade"; p["talentRevealed"]=True
+        p["title"]="Immortal Emperor"; 
+        if "Immortal Emperor" not in p.get("titles",[]): p["titles"].append("Immortal Emperor")
+    return None
+
 def process_command(sender_id, raw_text):
-    # sender_id: WhatsApp JID OR web:<name>
     if sender_id.startswith("web:"):
         name=sender_id[4:]; p=get_player_by_name(name)
         if not p: p=get_player(sender_id, name)
@@ -129,21 +149,57 @@ def process_command(sender_id, raw_text):
     text=(raw_text or "").strip()
     if not text.startswith("/"): return "Use /help - Example: /register Infinity"
     parts=text[1:].split(" "); cmd=parts[0].lower(); args=parts[1:]; rest=" ".join(args)
-    if cmd=="help": return box_str("HELP MENU",["PLAYER: /register /profile /wallet /stats","/daily /claim /race /gender /rename","WORK: /job list /job work /bank /give /gamble","BATTLE: /pvp /dungeon enter /moves /mymoves","LIFE: /marry /house buy /car buy /shop buy /pet buy","GUILD: /guild create /guild join /guild info","BANK: /bank open /bank deposit /bank profit","OWNER: /Immortal /link whatsapp","WEB + WHATSAPP SAME ACCOUNT ✅"])
+    # --- NEW HELP - BULLET LIST, NO NUMBERS ---
+    if cmd=="help": return box_str("HELP MENU",[
+        "• PLAYER: /register /profile /wallet /stats",
+        "• DAILY: /daily /claim",
+        "• CUSTOM: /race /gender /rename",
+        "• WORK: /job list /job work /bank /give /gamble",
+        "• BATTLE: /pvp /dungeon enter /moves /mymoves",
+        "• LIFE: /marry /house buy /car buy /shop buy /pet buy",
+        "• GUILD: /guild create /guild join /guild info",
+        "• BANK: /bank open /bank deposit /bank profit",
+        "• OWNER: /Immortal /link whatsapp",
+        "• WEB + WHATSAPP SAME ACCOUNT ✅",
+        "",
+        "• REGISTER STEPS:",
+        "• Step 1: /register Infinity",
+        "• Step 2: /register Infinity God male",
+        "• Example: /register Infinity God male"
+    ])
     if cmd=="ping": return "Pong! Alive! Lord Infinity Bot is ON ✅ Owner: 0779798568"
     if cmd=="info":
         reg=sum(1 for pl in DB["players"].values() if pl.get("registered"))
         return box_str("BOT INFO",["Bot: INFINITY AND BEYOND v6 MERGED","Owner Line: 0779798568 - Lord Infinity",f"Players registered: {reg}",f"Players total: {len(DB['players'])}",f"Economy: {fmt(WORLD['totalZeni'])}",f"Auto Battle: {'ON' if DB.get('auto_battle') else 'OFF'}"])
+    # --- NEW REGISTER - 2 STEP ---
     if cmd=="register":
-        if p["registered"]: return f"Already registered as {p['displayName']}! Type /profile"
-        name=rest or "Player"
+        if not args: return "Use: /register <name>  Example: /register Infinity\nThen: /register Infinity God male"
+        name=args[0]
+        race_arg=args[1] if len(args)>=2 else ""
+        gender_arg=args[2] if len(args)>=3 else ""
+        # If already registered AND they are doing Step 2 (name + race + gender)
+        if p["registered"]:
+            if len(args)>=2:
+                # Must be same name
+                if name.lower()!=p["displayName"].lower():
+                    return f"You are already {p['displayName']}! Use /register {p['displayName']} {race_arg} {gender_arg}"
+                err=apply_register_details(p, race_arg, gender_arg)
+                if err: return err
+                save()
+                return box_str("REGISTRATION COMPLETE",[f"Name: {p['displayName']}",f"Title: {p.get('title','Adventurer')}",f"Race: {p['race']}",f"Gender: {p['gender']}",f"1,000,000 Zeni","Web + WhatsApp SAME ACCOUNT ✅","Type /profile to see your Immortal Emperor form" if p.get("title")=="Immortal Emperor" else "Type /profile"])
+            return f"Already registered as {p['displayName']}! Type /profile\nTo finish setup type: /register {p['displayName']} <race> <gender>  Example: /register {p['displayName']} God male"
+        # Not yet registered - Step 1 or Full in one go
         ex=get_player_by_name(name)
         if ex and ex["id"]!=p["id"]: return f"⚠️ Name '{name}' is already taken! Please change your name!"
         p["registered"]=True; p["displayName"]=name; p["name"]=name; p["zeni"]=1000000; p["race"]=random.choice(["Human","Demon"]); p["birthday"]=cat_now().strftime("%d %b %Y"); p["age"]=15; p["lifespan"]=random.randint(70,95)
-        if name.lower()=="infinity":
-            # INFINITY PERKS - password 2164 for Web, WhatsApp owner is Infinity
-            p["isInfinity"]=True; p["isChosen"]=True; p["chosenUntil"]=time.time()+2*24*3600; p["race"]="God"; p["atk"]=100; p["maxHp"]=300; p["hp"]=300; p["mp"]=9999; p["maxMp"]=9999; p["cultRealm"]=1; p["cultLayer"]=9; p["talentType"]="Bloodline"; p["talentValue"]="Primordial Chaos Bloodline"; p["talentGrade"]="Divine Grade"; p["talentRevealed"]=True
-        save(); return box_str("WELCOME",[f"Hello {p['displayName']}",f"Race: {p['race']}","1,000,000 Zeni","Web + WhatsApp SAME ACCOUNT ✅","Type /profile"])
+        # If they did full in one go: /register Infinity God male
+        if race_arg or gender_arg:
+            err=apply_register_details(p, race_arg, gender_arg)
+            if err: return err
+            save()
+            return box_str("WELCOME - IMMORTAL EMPEROR" if p.get("title")=="Immortal Emperor" else "WELCOME",[f"Hello {p['displayName']}",f"Title: {p.get('title','Adventurer')}",f"Race: {p['race']}",f"Gender: {p['gender']}","1,000,000 Zeni","Web + WhatsApp SAME ACCOUNT ✅","Type /profile"])
+        # Only Step 1 done - ask for Step 2
+        save(); return box_str("WELCOME - STEP 1 DONE",[f"Hello {p['displayName']}",f"Race: {p['race']} (temporary)",f"1,000,000 Zeni","", "⚠️ NOW DO STEP 2:",f"/register {name} <race> <gender>",f"Example: /register {name} God male", "Races: Human Demon Fairy Mage Elf Vampire Dragon Angel God"])
     if not p["registered"] and cmd not in ["register","help","ping","info","link","password"]: return "Not registered. Type /register <name>  Example: /register Infinity"
     if cmd=="profile": return box_str("PROFILE",[f"{p['displayName']} {p['rank']}",f"Title: {p.get('title','Adventurer')}",f"Race: {p['race']} Gender: {p['gender']}",f"HP {p['hp']}/{p['maxHp']} MP {p['mp']}/{p['maxMp']}",f"ATK {p['atk']} DEF {p['def']} SPD {p['spd']}",f"Level {p['level']} EXP {p['exp']}/{exp_need(p['level'])}",f"Zeni {fmt(p['zeni'])} Bank {fmt(p['bank'])} Job: {p['job']}",f"House: {p['house']} Car: {p.get('car')}",f"Dungeon Floor: {p.get('dungeon_floor',1)} Checkpoint: {p.get('checkpoint',1)}",f"Cultivation: Realm {p.get('cultRealm',0)} Layer {p.get('cultLayer',1)}",f"Talent: {p.get('talentType','-')} {p.get('talentValue','-')} {p.get('talentGrade','')}",f"Perks: {', '.join(p.get('titles',[]))}"])
     if cmd=="stats": return box_str("STATS",[f"{p['displayName']} Lv{p['level']}",f"Rank: {p['rank']}",f"HP {p['hp']} ATK {p['atk']} DEF {p['def']}",f"Zeni {fmt(p['zeni'])}"])
@@ -354,7 +410,6 @@ def process_command(sender_id, raw_text):
         if args and args[0]=="fight": return "Reflection HP 200 - Use /moves"
     return "No Such Command Player - Type /help"
 
-# ===== WEB + WHATSAPP SERVER - ONE FILE =====
 app = Flask(__name__)
 HTML = """<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>INFINITY HUNTER</title><style>body{background:#050510;color:#fff;font-family:Arial;padding:16px}input{width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:2px solid #7B2FFF;border-radius:10px}button{width:100%;padding:13px;background:#FFD700;color:#000;border:none;border-radius:12px;font-weight:900;margin:6px 0}.card{background:#111128;border:1px solid #333;padding:12px;border-radius:16px;margin:8px 0}pre{white-space:pre-wrap;background:#000;padding:10px;border-radius:10px}</style></head><body><h1 style='color:#FFD700;text-align:center'>⚡ INFINITY HUNTER ⚡</h1><p style='text-align:center'>Web + WhatsApp SAME GAME • Owner: 0779798568 Lord Infinity</p><div class='card'><h3>REGISTER / LOGIN</h3><input id='name' placeholder='Name e.g. infinity'><input id='pass' placeholder='4-digit e.g. 2164' maxlength='4'><button onclick='doCmd("/register "+document.getElementById("name").value)'>⚡ REGISTER / LOGIN - PRESS THIS</button><p style='font-size:12px'>Infinity + 2164 = Lord Infinity Perks • Other names any 4-digit pass</p></div><div class='card'><h3>PLAY</h3><input id='cmd' placeholder='Type command e.g. /profile /daily /dungeon enter /moves 2'><button onclick='doCmd(document.getElementById("cmd").value)'>▶ SEND COMMAND</button><div style='display:flex;gap:6px;flex-wrap:wrap'><button onclick='doCmd("/profile")' style='width:48%;background:#7B2FFF;color:#fff'>👤 PROFILE</button><button onclick='doCmd("/daily")' style='width:48%;background:#7B2FFF;color:#fff'>🎁 DAILY</button><button onclick='doCmd("/dungeon enter")' style='width:48%;background:#FF0000;color:#fff'>🏰 DUNGEON</button><button onclick='doCmd("/moves")' style='width:48%;background:#00AA00;color:#fff'>⚔️ MOVES</button><button onclick='doCmd("/stats")' style='width:48%;background:#7B2FFF;color:#fff'>📊 STATS</button><button onclick='doCmd("/leaderboard")' style='width:48%;background:#FFD700;color:#000'>🏆 LEADERBOARD</button></div></div><pre id='out'>Welcome! Register first: Type name above and press REGISTER.</pre><script>let myName='';async function doCmd(text){if(!text) return; if(text.startsWith('/register')) myName=text.replace('/register ','').trim(); if(!myName) myName=document.getElementById('name').value.trim()||'Player'; let r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:myName,text:text})}); let j=await r.json(); document.getElementById('out').textContent=j.reply;}</script></body></html>"""
 @app.route('/')
@@ -362,9 +417,6 @@ def home(): return HTML
 @app.route('/api/command', methods=['POST'])
 def api_cmd():
     data=request.json or {}; name=data.get('name','Player'); text=data.get('text','/help')
-    # Web register fix: if /register with name, use that name
-    # For Infinity + 2164 check: Web password is handled in frontend, but we allow all
-    # If player tries to register as infinity from Web, give perks (process_command does it)
     reply=process_command(f"web:{name}", text); save()
     p=get_player_by_name(name)
     return jsonify({"reply":reply,"player":p})
