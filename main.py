@@ -1,5 +1,4 @@
 # INFINITY MERGED - ONE FILE - Web + WhatsApp - Owner: 0779798568 - Lord Infinity
-# Deploy: GitHub -> Render -> Start: python3 main.py
 import json, random, os, time, datetime, copy
 from flask import Flask, request, jsonify
 
@@ -18,6 +17,11 @@ def fmt(n):
 def time_left(s):
     h=int(s//3600); m=int((s%3600)//60); sec=int(s%60)
     return f"{h}h {m}m {sec}s"
+def bar(cur, maxv, length=20):
+    if maxv<=0: maxv=1
+    filled=int(cur/maxv*length)
+    filled=max(0,min(length,filled))
+    return "█"*filled + "░"*(length-filled)
 
 DB_FILE = "infinity_db.json"
 DB = {"players": {}, "market": [], "pending_pvp": {}, "disabled": [], "admins": [], "guilds": {}, "disabled_groups": [], "car_listings": [], "last_cmd_time": 0, "backup": None, "backup_disabled": [], "backup_disabled_groups": [], "backup_guilds": {}, "dungeon": None, "guild_fund_requests": [], "groups": {}, "auto_battle": False, "first_lv500": None}
@@ -62,9 +66,9 @@ def gain_zeni(p,amt):
 def get_player(pid,name="Player"):
     if pid not in DB["players"]:
         now=cat_now()
-        DB["players"][pid]={"id":pid,"name":name,"displayName":name,"registered":False,"race":"Human","level":1,"exp":0,"zeni":1000000,"bank":0,"bank_open":False,"bank_opened_at":0,"bank_deposit_total":0,"last_bank_profit":0,"savings":0,"hp":100,"maxHp":100,"mp":50,"maxMp":50,"atk":15,"def":10,"spd":12,"agi":10,"con":10,"rank":"E - Novice","wins":0,"losses":0,"dungeonClears":0,"dungeon_floor":1,"checkpoint":1,"kills":0,"job":"Unemployed","loan":0,"loanDue":0,"house":"None","houseTier":0,"property":"None","car":"None","shop":"None","pet":None,"guild_permit":False,"guild":"None","guildRank":"None","lastDaily":0,"lastWork":0,"lastClaim":0,"lastRob":0,"jailed":0,"banned":False,"questsDone":0,"notifications":[],"gender":"Not Set","age":15,"lifespan":80,"birthday":now.strftime("%d %b %Y"),"used_codes":[],"spouse":None,"title":"Adventurer","titles":["Adventurer"],"emoji":"Sword","password":"","cultRealm":0,"cultLayer":1,"cultXp":0,"cultNeed":100,"talentType":"","talentValue":"","talentGrade":"","isInfinity":False,"isChosen":False,"chosenUntil":0,"wood":0,"houseBuilt":False,"sect":"No Sect","sectRank":"-","hunger":100,"family":"No Family","party":"No Party","church":"No Church"}
+        DB["players"][pid]={"id":pid,"name":name,"displayName":name,"registered":False,"race":"Human","level":1,"exp":0,"zeni":1000000,"bank":0,"bank_open":False,"bank_opened_at":0,"bank_deposit_total":0,"last_bank_profit":0,"savings":0,"hp":100,"maxHp":100,"mp":50,"maxMp":50,"atk":15,"def":10,"spd":12,"agi":10,"con":10,"rank":"E - Novice","wins":0,"losses":0,"dungeonClears":0,"dungeon_floor":1,"checkpoint":1,"kills":0,"job":"Unemployed","loan":0,"loanDue":0,"house":"None","houseTier":0,"property":"None","car":"None","shop":"None","pet":None,"guild_permit":False,"guild":"None","guildRank":"None","lastDaily":0,"lastWork":0,"lastClaim":0,"lastRob":0,"jailed":0,"banned":False,"questsDone":0,"notifications":[],"gender":"Not Set","age":15,"lifespan":80,"birthday":now.strftime("%d %b %Y"),"used_codes":[],"spouse":None,"title":"Adventurer","titles":["Adventurer"],"emoji":"Sword","password":"","cultRealm":0,"cultLayer":1,"cultXp":0,"cultNeed":100,"talentType":"","talentValue":"","talentGrade":"","isInfinity":False,"isChosen":False,"chosenUntil":0,"wood":0,"houseBuilt":False,"sect":"No Sect","sectRank":"-","hunger":100,"family":"No Family","party":"No Party","church":"No Church","inventory":{},"skills":[],"active_skills":[],"awaiting_move_until":0,"gems":5,"str":0,"int":0,"vit":0,"luk":0}
         WORLD["totalPlayers"]+=1
-    defaults={"password":"","cultRealm":0,"cultLayer":1,"cultXp":0,"cultNeed":100,"talentType":"","talentValue":"","talentGrade":"","isInfinity":False,"isChosen":False,"chosenUntil":0,"wood":0,"houseBuilt":False,"sect":"No Sect","sectRank":"-","hunger":100,"family":"No Family","party":"No Party","church":"No Church"}
+    defaults={"password":"","cultRealm":0,"cultLayer":1,"cultXp":0,"cultNeed":100,"talentType":"","talentValue":"","talentGrade":"","isInfinity":False,"isChosen":False,"chosenUntil":0,"wood":0,"houseBuilt":False,"sect":"No Sect","sectRank":"-","hunger":100,"family":"No Family","party":"No Party","church":"No Church","inventory":{},"skills":[],"active_skills":[],"awaiting_move_until":0,"gems":5,"str":0,"int":0,"vit":0,"luk":0}
     for k,v in defaults.items():
         if k not in DB["players"][pid]: DB["players"][pid][k]=v
     return DB["players"][pid]
@@ -117,26 +121,21 @@ def use_move_in_dungeon(p,num):
         p["hp"]=1; respawn=p.get("checkpoint",1); p["dungeon_floor"]=respawn; DB["dungeon"]=None; save()
         return box_str("YOU DIED",[f"Died on Floor {d['floor']}",f"Respawn at Checkpoint Floor {respawn}","HP set to 1"])
     save(); return "\n".join(out)+"\nYour turn! /moves <number> again"
-
-# --- NEW: APPLY RACE + GENDER + IMMORTAL EMPEROR PERKS ---
 def apply_register_details(p, race_raw, gender_raw):
     pretty={"human":"Human","demon":"Demon","fairy":"Fairy","mage":"Mage","elf":"Elf","vampire":"Vampire","dragon":"Dragon","angel":"Angel","god":"God"}
     if race_raw:
         r=race_raw.lower()
         if r in pretty:
-            if r=="god" and not is_owner(p["id"]) and p.get("displayName","").lower()!="infinity":
-                return "God only for Admins / Infinity"
+            if r=="god" and not is_owner(p["id"]) and p.get("displayName","").lower()!="infinity": return "God only for Admins / Infinity"
             p["race"]=pretty[r]
     if gender_raw:
         g=gender_raw.lower()
-        if g in ["male","female"]:
-            p["gender"]=g.capitalize()
-    # Immortal Emperor check - Infinity + God + male
+        if g in ["male","female"]: p["gender"]=g.capitalize()
     if p.get("displayName","").lower()=="infinity" and p.get("race")=="God" and p.get("gender")=="Male":
         p["isInfinity"]=True; p["isChosen"]=True; p["chosenUntil"]=time.time()+2*24*3600
         p["race"]="God"; p["atk"]=100; p["maxHp"]=300; p["hp"]=300; p["mp"]=9999; p["maxMp"]=9999
         p["cultRealm"]=1; p["cultLayer"]=9; p["talentType"]="Bloodline"; p["talentValue"]="Primordial Chaos Bloodline"; p["talentGrade"]="Divine Grade"; p["talentRevealed"]=True
-        p["title"]="Immortal Emperor"; 
+        p["title"]="Immortal Emperor"
         if "Immortal Emperor" not in p.get("titles",[]): p["titles"].append("Immortal Emperor")
     return None
 
@@ -147,62 +146,117 @@ def process_command(sender_id, raw_text):
     else:
         p=get_player(sender_id, sender_id)
     text=(raw_text or "").strip()
+    # ===== NEW: BARE NUMBER WITHIN 5 SECONDS AFTER /moves =====
+    # If player is fighting and just types "5" (no /) within 5 sec of /moves, use it
+    if text.isdigit() and not text.startswith("/"):
+        if time.time() <= p.get("awaiting_move_until",0):
+            num=int(text)
+            p["awaiting_move_until"]=0
+            return use_move_in_dungeon(p, num)
+        else:
+            return "⏰ Time expired! 5 seconds passed.\nYou must type /moves 5 now.\nType /moves to see moves again."
     if not text.startswith("/"): return "Use /help - Example: /register Infinity"
     parts=text[1:].split(" "); cmd=parts[0].lower(); args=parts[1:]; rest=" ".join(args)
-    # --- NEW HELP - BULLET LIST, NO NUMBERS ---
+    # ===== NEW HELP - EXACTLY LIKE SCREENSHOT 1 - NO PLAYER/DAILY/LIFE LABELS =====
     if cmd=="help": return box_str("HELP MENU",[
-        "• PLAYER: /register /profile /wallet /stats",
-        "• DAILY: /daily /claim",
-        "• CUSTOM: /race /gender /rename",
-        "• WORK: /job list /job work /bank /give /gamble",
-        "• BATTLE: /pvp /dungeon enter /moves /mymoves",
-        "• LIFE: /marry /house buy /car buy /shop buy /pet buy",
-        "• GUILD: /guild create /guild join /guild info",
-        "• BANK: /bank open /bank deposit /bank profit",
-        "• OWNER: /Immortal /link whatsapp",
-        "• WEB + WHATSAPP SAME ACCOUNT ✅",
+        "• /register <name> — Join the world",
+        "• /stats — View your stats",
+        "• /profile — View your profile card",
+        "• /rename <new name> — Change your display name",
+        "• /info — Bot stats, uptime, and population by race",
+        "• /help — Show this menu",
+        "• /ping — Check if bot is alive",
         "",
-        "• REGISTER STEPS:",
+        "⚔️  BATTLE",
+        "• /pvp @user — Challenge someone",
+        "• /skill cast <magic> @user — Cast magic",
+        "• /skill activate <name> — Use buff skill, or reactivate a deactivated passive",
+        "• /skill deactivate <name> — Turn off an always-on passive (e.g. Gluttony)",
+        "• /move <move> — Use a move in battle",
+        "• /moves — See your options during battle",
+        "• /mymoves — View your full moveset anytime",
+        "• /learn — View/confirm newly unlocked race moves",
+        "• /accept — Accept a PvP challenge",
+        "• /decline — Decline a challenge",
+        "• /forfeit — Forfeit current battle",
+        "",
+        "🏰  DUNGEON",
+        "• /dungeon enter — Enter the dungeon",
+        "• /inventory — View your items",
+        "• /use <item> [qty] — Use an item, or several at once (chests, tickets, potions, EXP booster)",
+        "• Battle potions: Small Heal, Medium Heal, MP Potion, Greater MP Potion, Phoenix Elixir (full restore, clears stuns and debuffs), Stat Boost (+20% ATK and DEF for 3 turns) — use in any battle",
+        "• /sell <item> [qty] — Sell for Zeni, one or several at once",
+        "",
+        "👥  PARTY",
+        "• /party create <name> — Create a party",
+        "• /party invite @user — Invite someone",
+        "• /party accept — Accept an invite",
+        "• /party leave — Leave your party",
+        "• /party kick @user — Remove a member (leader only)",
+        "",
+        "• /register Steps:",
         "• Step 1: /register Infinity",
         "• Step 2: /register Infinity God male",
-        "• Example: /register Infinity God male"
     ])
     if cmd=="ping": return "Pong! Alive! Lord Infinity Bot is ON ✅ Owner: 0779798568"
     if cmd=="info":
         reg=sum(1 for pl in DB["players"].values() if pl.get("registered"))
         return box_str("BOT INFO",["Bot: INFINITY AND BEYOND v6 MERGED","Owner Line: 0779798568 - Lord Infinity",f"Players registered: {reg}",f"Players total: {len(DB['players'])}",f"Economy: {fmt(WORLD['totalZeni'])}",f"Auto Battle: {'ON' if DB.get('auto_battle') else 'OFF'}"])
-    # --- NEW REGISTER - 2 STEP ---
     if cmd=="register":
         if not args: return "Use: /register <name>  Example: /register Infinity\nThen: /register Infinity God male"
-        name=args[0]
-        race_arg=args[1] if len(args)>=2 else ""
-        gender_arg=args[2] if len(args)>=3 else ""
-        # If already registered AND they are doing Step 2 (name + race + gender)
+        name=args[0]; race_arg=args[1] if len(args)>=2 else ""; gender_arg=args[2] if len(args)>=3 else ""
         if p["registered"]:
             if len(args)>=2:
-                # Must be same name
-                if name.lower()!=p["displayName"].lower():
-                    return f"You are already {p['displayName']}! Use /register {p['displayName']} {race_arg} {gender_arg}"
+                if name.lower()!=p["displayName"].lower(): return f"You are already {p['displayName']}! Use /register {p['displayName']} {race_arg} {gender_arg}"
                 err=apply_register_details(p, race_arg, gender_arg)
                 if err: return err
-                save()
-                return box_str("REGISTRATION COMPLETE",[f"Name: {p['displayName']}",f"Title: {p.get('title','Adventurer')}",f"Race: {p['race']}",f"Gender: {p['gender']}",f"1,000,000 Zeni","Web + WhatsApp SAME ACCOUNT ✅","Type /profile to see your Immortal Emperor form" if p.get("title")=="Immortal Emperor" else "Type /profile"])
+                save(); return box_str("REGISTRATION COMPLETE",[f"Name: {p['displayName']}",f"Title: {p.get('title','Adventurer')}",f"Race: {p['race']}",f"Gender: {p['gender']}","1,000,000 Zeni","Web + WhatsApp SAME ACCOUNT ✅","Type /profile"])
             return f"Already registered as {p['displayName']}! Type /profile\nTo finish setup type: /register {p['displayName']} <race> <gender>  Example: /register {p['displayName']} God male"
-        # Not yet registered - Step 1 or Full in one go
         ex=get_player_by_name(name)
-        if ex and ex["id"]!=p["id"]: return f"⚠️ Name '{name}' is already taken! Please change your name!"
+        if ex and ex["id"]!=p["id"]: return f"⚠️ Name '{name}' is already taken!"
         p["registered"]=True; p["displayName"]=name; p["name"]=name; p["zeni"]=1000000; p["race"]=random.choice(["Human","Demon"]); p["birthday"]=cat_now().strftime("%d %b %Y"); p["age"]=15; p["lifespan"]=random.randint(70,95)
-        # If they did full in one go: /register Infinity God male
         if race_arg or gender_arg:
             err=apply_register_details(p, race_arg, gender_arg)
             if err: return err
-            save()
-            return box_str("WELCOME - IMMORTAL EMPEROR" if p.get("title")=="Immortal Emperor" else "WELCOME",[f"Hello {p['displayName']}",f"Title: {p.get('title','Adventurer')}",f"Race: {p['race']}",f"Gender: {p['gender']}","1,000,000 Zeni","Web + WhatsApp SAME ACCOUNT ✅","Type /profile"])
-        # Only Step 1 done - ask for Step 2
-        save(); return box_str("WELCOME - STEP 1 DONE",[f"Hello {p['displayName']}",f"Race: {p['race']} (temporary)",f"1,000,000 Zeni","", "⚠️ NOW DO STEP 2:",f"/register {name} <race> <gender>",f"Example: /register {name} God male", "Races: Human Demon Fairy Mage Elf Vampire Dragon Angel God"])
+            save(); return box_str("WELCOME - IMMORTAL EMPEROR" if p.get("title")=="Immortal Emperor" else "WELCOME",[f"Hello {p['displayName']}",f"Title: {p.get('title','Adventurer')}",f"Race: {p['race']}",f"Gender: {p['gender']}","1,000,000 Zeni","Web + WhatsApp SAME ACCOUNT ✅","Type /profile"])
+        save(); return box_str("WELCOME - STEP 1 DONE",[f"Hello {p['displayName']}",f"Race: {p['race']} (temporary)","1,000,000 Zeni","","⚠️ NOW DO STEP 2:",f"/register {name} <race> <gender>",f"Example: /register {name} God male","Races: Human Demon Fairy Mage Elf Vampire Dragon Angel God"])
     if not p["registered"] and cmd not in ["register","help","ping","info","link","password"]: return "Not registered. Type /register <name>  Example: /register Infinity"
     if cmd=="profile": return box_str("PROFILE",[f"{p['displayName']} {p['rank']}",f"Title: {p.get('title','Adventurer')}",f"Race: {p['race']} Gender: {p['gender']}",f"HP {p['hp']}/{p['maxHp']} MP {p['mp']}/{p['maxMp']}",f"ATK {p['atk']} DEF {p['def']} SPD {p['spd']}",f"Level {p['level']} EXP {p['exp']}/{exp_need(p['level'])}",f"Zeni {fmt(p['zeni'])} Bank {fmt(p['bank'])} Job: {p['job']}",f"House: {p['house']} Car: {p.get('car')}",f"Dungeon Floor: {p.get('dungeon_floor',1)} Checkpoint: {p.get('checkpoint',1)}",f"Cultivation: Realm {p.get('cultRealm',0)} Layer {p.get('cultLayer',1)}",f"Talent: {p.get('talentType','-')} {p.get('talentValue','-')} {p.get('talentGrade','')}",f"Perks: {', '.join(p.get('titles',[]))}"])
-    if cmd=="stats": return box_str("STATS",[f"{p['displayName']} Lv{p['level']}",f"Rank: {p['rank']}",f"HP {p['hp']} ATK {p['atk']} DEF {p['def']}",f"Zeni {fmt(p['zeni'])}"])
+    # ===== NEW STATS - BUILT CARD LIKE SCREENSHOT 2 =====
+    if cmd=="stats":
+        # Map old stats to screenshot attributes
+        STR=p.get("str",0)+p["atk"]//5; AGI=p.get("agi",10); INT=p.get("int",0)+p["maxMp"]//20; VIT=p.get("vit",0)+p.get("con",10); DEF=p["def"]; LUK=p.get("luk",0)+p["spd"]//3
+        hp_pct=int(p["hp"]/max(1,p["maxHp"])*100); xp_pct=int(p["exp"]/max(1,exp_need(p["level"]))*100)
+        rank_short=p["rank"].split(" - ")[0] if " - " in p["rank"] else p["rank"]
+        return box_str(f"{p['displayName'].upper()} — ATTRIBUTES",[
+            f"🧩 {rank_short} | 💠 LV.{p['level']} | 💎 GEMS: {p.get('gems',5)}",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            f"💪 STR: {STR} (+{STR*2}% DMG)  |  ⚡ AGI: {AGI} (+{AGI}% Crit/Dodge)",
+            f"🧠 INT: {INT} (+{INT}% Skill)  |  ❤️ VIT: {VIT} (+{VIT*10} Max HP)",
+            f"🛡️ DEF: {DEF} (-{DEF} Boss DMG)  |  🍀 LUK: {LUK} (+{LUK}% Luck)",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            f"❤️ HP {p['hp']} / {p['maxHp']} ({hp_pct}%)",
+            bar(p["hp"], p["maxHp"], 22),
+            f"⚡ XP {p['exp']} / {exp_need(p['level'])} ({xp_pct}%)",
+            bar(p["exp"], exp_need(p["level"]), 22),
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            f"💰 Zeni: {fmt(p['zeni'])}  |  🏦 Bank: {fmt(p['bank'])}",
+            f"🏆 Rank: {p['rank']}  |  Title: {p.get('title','Adventurer')}",
+            "",
+            "📊 HUNTER ATTRIBUTES — Upgrade with /addstat [stat] [amt]!",
+        ])
+    if cmd=="addstat":
+        if len(args)<2: return "Use: /addstat [stat] [amt]  Example: /addstat STR 5\nStats: STR AGI INT VIT DEF LUK"
+        stat=args[0].lower(); 
+        try: amt=int(args[1])
+        except: return "Amount must be number"
+        if p.get("gems",5)<amt: return f"Not enough GEMS! You have {p.get('gems',5)}"
+        keymap={"str":"str","agi":"agi","int":"int","vit":"vit","def":"def","luk":"luk"}
+        if stat not in keymap: return "Stats: STR AGI INT VIT DEF LUK"
+        if stat=="def": p["def"]+=amt
+        elif stat=="agi": p["agi"]+=amt
+        else: p[keymap[stat]]=p.get(keymap[stat],0)+amt
+        p["gems"]-=amt; save(); return f"✅ +{amt} {stat.upper()}! GEMS left: {p['gems']}\nType /stats to see built card"
     if cmd=="wallet": return box_str("WALLET",[f"Cash: {fmt(p['zeni'])}",f"Bank: {fmt(p['bank'])}",f"Assets: {fmt(total_assets(p))}",f"House: {p['house']} Car: {p.get('car')}"])
     if cmd=="daily":
         now=time.time(); left=86400-(now-p.get("lastDaily",0))
@@ -212,15 +266,48 @@ def process_command(sender_id, raw_text):
         now=time.time(); left=86400-(now-p.get("lastClaim",0))
         if left>0: return box_str("CLAIM WAIT",[f"Wait {time_left(left)}"])
         p["lastClaim"]=now; r=gain_zeni(p,5000); save(); return box_str("CLAIMED",[f"+{fmt(r)} Zeni"])
-    if cmd=="moves":
-        if not args: return box_str("ALL MOVES",["1 Slash 20 dmg 0 MP Lv1","2 Fireball 35 dmg 10 MP Lv1","3 Shadow Strike 55 dmg 15 MP Lv5","4 Dragon Smash 80 dmg 20 MP Lv10","5 Heal +40 HP 15 MP Lv1","6 Race Power 100 dmg 25 MP Lv15","7 Lightning 70 dmg 18 MP Lv8","8 Phoenix +100 HP 30 MP Lv20","9 God Punch 200 dmg God only","10 Infinity Blast 300 dmg Emperor only","Example: /moves 2"])
-        try: num=int(args[0])
-        except: return "Use /moves <number>"
-        return use_move_in_dungeon(p,num)
+    # ===== NEW MOVES + MOVE - 5 SECOND RULE =====
+    if cmd in ["moves","move"]:
+        # /move 5 = same as /moves 5
+        if args:
+            try: num=int(args[0])
+            except: return "Use /moves <number>  Example: /moves 5"
+            p["awaiting_move_until"]=0; return use_move_in_dungeon(p,num)
+        # No args: show options + start 5 sec window
+        if not DB.get("dungeon") or not DB["dungeon"].get("in_dungeon"):
+            # Not fighting - just show list like before
+            my=get_my_moves(p); lines=[f"{p['displayName']} Lv{p['level']}"]
+            for num in my: mv=ALL_MOVES[num]; lines.append(f"{num}. {mv['name']} - {mv['dmg']} dmg - {mv['desc']}")
+            return box_str("MY MOVES",lines)
+        # Fighting: show battle options + 5 sec timer
+        my=get_my_moves(p); lines=[f"⚔️ BATTLE - Floor {DB['dungeon']['floor']} Boss HP: {DB['dungeon']['enemy_hp']}",f"Your HP: {p['hp']}/{p['maxHp']} MP: {p['mp']}/{p['maxMp']}",""]
+        for num in my: mv=ALL_MOVES[num]; lines.append(f"{num}. {mv['name']} - {mv['dmg']} dmg - {mv['mp']} MP - {mv['desc']}")
+        lines+=["", "⚡ QUICK: Just type the NUMBER e.g. 5 - within 5 seconds!","⏰ After 5 seconds you MUST type /moves 5"]
+        p["awaiting_move_until"]=time.time()+5; save()
+        return box_str("CHOOSE YOUR MOVE",lines)
     if cmd=="mymoves":
         my=get_my_moves(p); lines=[f"{p['displayName']} Lv{p['level']} Rank: {p['rank']}",f"HP {p['hp']} MP {p['mp']}"]
         for num in my: mv=ALL_MOVES[num]; lines.append(f"{num}. {mv['name']} - {mv['dmg']} dmg - {mv['desc']}")
         return box_str("MY MOVES",lines)
+    if cmd=="learn":
+        my=get_my_moves(p); lines=["Newly unlocked race moves:"]
+        for num in my: mv=ALL_MOVES[num]; lines.append(f"{num}. {mv['name']} Lv{mv['lvl']} - {mv['desc']}")
+        lines.append("Type /mymoves to confirm")
+        return box_str("LEARN",lines)
+    if cmd=="skill":
+        if not args: return "Use: /skill cast <magic> @user | /skill activate <name> | /skill deactivate <name>"
+        if args[0]=="cast":
+            magic=" ".join(args[1:-1]) if len(args)>2 else " ".join(args[1:]); target=args[-1] if len(args)>1 else ""
+            return box_str("SKILL CAST",[f"You cast {magic} on {target}","Damage based on your INT + Race Power"])
+        if args[0]=="activate":
+            name=" ".join(args[1:]); 
+            if name not in p.get("active_skills",[]): p["active_skills"].append(name)
+            save(); return f"✅ Activated: {name}"
+        if args[0]=="deactivate":
+            name=" ".join(args[1:])
+            if name in p.get("active_skills",[]): p["active_skills"].remove(name)
+            save(); return f"❌ Deactivated: {name} (always-on passive off)"
+        return "Use: /skill cast /skill activate /skill deactivate"
     if cmd=="dungeon":
         if args and args[0]=="enter":
             if DB.get("dungeon") and DB["dungeon"].get("in_dungeon"): return "Already in dungeon! Use /moves"
@@ -228,6 +315,35 @@ def process_command(sender_id, raw_text):
         if args and args[0]=="floor": return box_str("DUNGEON FLOOR",[f"Current Floor: {p.get('dungeon_floor',1)}",f"Checkpoint: {p.get('checkpoint',1)}",f"Clears: {p.get('dungeonClears',0)}","Next: /dungeon enter"])
         if args and args[0]=="leave": DB["dungeon"]=None; save(); return "Left dungeon"
         return "Use /dungeon enter | /dungeon floor | /dungeon leave"
+    if cmd=="inventory":
+        inv=p.get("inventory",{})
+        if not inv: return box_str("INVENTORY",["Empty - No items","Buy potions with /use /sell to trade"])
+        lines=[f"{k} x{v}" for k,v in inv.items()]; return box_str("INVENTORY",lines)
+    if cmd=="use":
+        if not args: return "Use: /use <item> [qty]  Example: /use Small Heal 1"
+        qty=1
+        try: qty=int(args[-1]); item=" ".join(args[:-1])
+        except: item=" ".join(args)
+        inv=p.get("inventory",{})
+        if inv.get(item,0)<qty: 
+            # Potion effect even if not in inventory for now - give heal
+            if "heal" in item.lower(): p["hp"]=min(p["maxHp"],p["hp"]+100); save(); return f"Used {item} +100 HP"
+            return f"You don't have {item}"
+        inv[item]-=qty; save(); return f"Used {item} x{qty}"
+    if cmd=="sell":
+        if not args: return "Use: /sell <item> [qty]"
+        qty=1
+        try: qty=int(args[-1]); item=" ".join(args[:-1])
+        except: item=" ".join(args)
+        price=1000*qty; r=gain_zeni(p,price); save(); return f"Sold {item} x{qty} for +{fmt(price)} Zeni"
+    if cmd=="party":
+        if not args: return "Use: /party create /invite /accept /leave /kick"
+        if args[0]=="create": p["party"]=" ".join(args[1:]) or "My Party"; save(); return f"Party created: {p['party']}"
+        if args[0]=="invite": return f"Invite sent to {' '.join(args[1:])} - They type /party accept"
+        if args[0]=="accept": p["party"]=p.get("party","Party"); save(); return f"Joined party: {p['party']}"
+        if args[0]=="leave": p["party"]="No Party"; save(); return "Left party"
+        if args[0]=="kick": return f"Kicked {' '.join(args[1:])} (leader only)"
+        return "Use: /party create /invite /accept /leave /kick"
     if cmd=="job":
         if not args or args[0]=="list": return box_str("JOBS",["cleaner 5k driver 12k","hacker 30k bank teller 20k","barber 8k chef 18k teacher 20k","farmer 10k miner 22k"])
         if args[0]=="apply": p["job"]=" ".join(args[1:]); save(); return box_str("JOB",[f"You are now {p['job']}"])
@@ -392,8 +508,12 @@ def process_command(sender_id, raw_text):
     if cmd=="go": return box_str("WHERE TO GO",["/go work /go home /go bar /go shop /go bank"])
     if cmd=="pvp":
         if not args: return "Use /pvp <player>"
-        return f"Challenge sent to {' '.join(args)} - They type /accept"
-    if cmd=="accept": return "No challenge - Use /pvp first"
+        DB["pending_pvp"][p["id"]]=" ".join(args); save(); return f"Challenge sent to {' '.join(args)} - They type /accept"
+    if cmd=="accept":
+        if not DB.get("pending_pvp"): return "No challenge - Use /pvp first"
+        return "Challenge accepted! Type /moves to fight!"
+    if cmd=="decline": DB["pending_pvp"]={}; save(); return "Challenge declined"
+    if cmd=="forfeit": DB["dungeon"]=None; save(); return "You forfeited current battle"
     if cmd=="labyrinth":
         if not args: return "Labyrinth Closed"
         if args[0]=="force":
@@ -434,7 +554,7 @@ def webhook():
                 for msg in change.get('value',{}).get('messages',[]):
                     sender=msg.get('from','')
                     text=msg.get('text',{}).get('body','')
-                    if text.startswith('/'):
+                    if text.startswith('/') or text.isdigit():
                         reply=process_command(sender, text); save()
                         send_whatsapp(sender, reply)
     except Exception as e: print("Webhook error",e)
