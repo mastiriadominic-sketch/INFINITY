@@ -1,7 +1,7 @@
 
-INFINITY v11 FINAL MERGED - No Labels - No Catch - Dungeon + Pokemon Fight - Listing Only
-import json, random, os, time, datetime
-from flask import Flask, request, jsonify
+#INFINITY v13 - General Returned - Catch Alone - Dungeon Alone - 15min Dungeon - Personal Gate
+import json,random,os,time,datetime
+from flask import Flask,request,jsonify
 OWNER_IDS=["260779798568","0779798568"]
 OWNER_NAMES=["lord infinity","infinity","immortal emperor","0779798568"]
 OWNER_PASSWORD="2164"
@@ -16,52 +16,60 @@ def fmt(n):
 def time_left(s):
     h=int(s//3600); m=int((s%3600)//60); sec=int(s%60)
     return f"{h}h {m}m {sec}s"
-def bar(cur,maxv,length=20):
-    if maxv<=0: maxv=1
-    f=max(0,min(length,int(cur/maxv*length)))
-    return "█"*f+"░"*(length-f)
+def bar(c,m,l=20):
+    if m<=0: m=1
+    f=max(0,min(l,int(c/m*l))); return "█"*f+"░"*(l-f)
 BOT_ECONOMY={"hgss":100000000,"lgss":100000000,"mgss":100000000,"zeni":2000000000000,"germ":0}
-RACES={"human":{"name":"Human","ability":"Adapt","desc":"+10% EXP"},"demon":{"name":"Demon","ability":"Demon Rage","desc":"+20% ATK"},"fairy":{"name":"Fairy","ability":"Fairy Heal","desc":"+20% Heal"},"mage":{"name":"Mage","ability":"Arcane Burst","desc":"+30% Skill"},"elf":{"name":"Elf","ability":"Elf Arrow","desc":"+20% AGI"},"vampire":{"name":"Vampire","ability":"Blood Drain","desc":"Lifesteal 15%"},"dragon":{"name":"Dragon","ability":"Dragon Breath","desc":"+30% HP"},"angel":{"name":"Angel","ability":"Holy Light","desc":"+20% DEF"},"god":{"name":"God","ability":"God Punch","desc":"Owners only"}}
-CLASSES={"warrior":{"name":"Warrior","ability":"Slash","desc":"+ATK"},"mage":{"name":"Mage","ability":"Fireball","desc":"+INT"},"assassin":{"name":"Assassin","ability":"Shadow Strike","desc":"+Crit"},"healer":{"name":"Healer","ability":"Heal","desc":"+Heal"},"archer":{"name":"Archer","ability":"Piercing Arrow","desc":"+SPD"},"tank":{"name":"Tank","ability":"Shield Wall","desc":"+DEF/HP"},"necromancer":{"name":"Necromancer","ability":"Soul Drain","desc":"Summon"},"swordmaster":{"name":"Swordmaster","ability":"Dragon Smash","desc":"+DMG"},"monarch":{"name":"Monarch","ability":"Monarch Rule","desc":"Appointed only"}}
-ANIME_RACE_MOVES={"Human":["Adapt - Tanjiro","Spirit Blade - Demon Slayer"],"Demon":["Demon Rage - Tanjiro","Hellfire - Naruto"],"Fairy":["Fairy Heal - Fairy Tail","Pixie Dust - Tinkerbell"],"Mage":["Arcane Burst - Frieren","Magic Missile - Harry Potter"],"Elf":["Elf Arrow - Legolas","Forest Blessing - LOTR"],"Vampire":["Blood Drain - Alucard","Night Bite - Twilight"],"Dragon":["Dragon Breath - Goku","Dragon Roar - Natsu"],"Angel":["Holy Light - Angel Beats","Judgement - Bleach"],"God":["God Punch - Saitama","Infinity Blast - Goku"]}
-ANIME_CLASS_MOVES={"Warrior":["Slash - Zoro","Dragon Smash - Goku"],"Mage":["Fireball - Naruto","Lightning - Sasuke"],"Assassin":["Shadow Strike - Sasuke","Silent Kill - Naruto"],"Healer":["Heal - Sakura","Phoenix Rebirth - Naruto"],"Archer":["Piercing Arrow - Legolas","Hawkeye - Avengers"],"Tank":["Shield Wall - Captain America","Iron Defense - Attack on Titan"],"Necromancer":["Soul Drain - Solo Leveling","Shadow Army - Solo Leveling"],"Swordmaster":["Dragon Smash - Zoro","Sword Dance - Demon Slayer"],"Monarch":["Monarch Rule - Solo Leveling","Monarch Slash - Jinwoo"]}
-ANIME_RANDOM=["Rasengan - Naruto","Chidori - Sasuke","Kamehameha - Goku","Bankai - Bleach","Gear 5 - Luffy","Domain Expansion - JJK","Susanoo - Naruto","Ultra Instinct - Goku"]
+RACES={"human":"Human","demon":"Demon","fairy":"Fairy","mage":"Mage","elf":"Elf","vampire":"Vampire","dragon":"Dragon","angel":"Angel","god":"God"}
+CLASSES={"warrior":"Warrior","mage":"Mage","assassin":"Assassin","healer":"Healer","archer":"Archer","tank":"Tank","necromancer":"Necromancer","swordmaster":"Swordmaster","monarch":"Monarch"}
+RACE_AB={"Human":"Adapt","Demon":"Demon Rage","Fairy":"Fairy Heal","Mage":"Arcane Burst","Elf":"Elf Arrow","Vampire":"Blood Drain","Dragon":"Dragon Breath","Angel":"Holy Light","God":"God Punch"}
+CLASS_AB={"Warrior":"Slash","Mage":"Fireball","Assassin":"Shadow Strike","Healer":"Heal","Archer":"Piercing Arrow","Tank":"Shield Wall","Necromancer":"Soul Drain","Swordmaster":"Dragon Smash","Monarch":"Monarch Rule"}
+ANIME_R={"human":["Adapt - Tanjiro","Spirit Blade - Demon Slayer"],"demon":["Demon Rage - Tanjiro","Hellfire - Naruto"],"fairy":["Fairy Heal - Fairy Tail","Pixie Dust - Tinkerbell"],"mage":["Arcane Burst - Frieren","Magic Missile - Harry Potter"],"elf":["Elf Arrow - Legolas","Forest Blessing - LOTR"],"vampire":["Blood Drain - Alucard","Night Bite - Twilight"],"dragon":["Dragon Breath - Goku","Dragon Roar - Natsu"],"angel":["Holy Light - Angel Beats","Judgement - Bleach"],"god":["God Punch - Saitama","Infinity Blast - Goku"]}
+ANIME_C={"warrior":["Slash - Zoro","Dragon Smash - Goku"],"mage":["Fireball - Naruto","Lightning - Sasuke"],"assassin":["Shadow Strike - Sasuke","Silent Kill - Naruto"],"healer":["Heal - Sakura","Phoenix Rebirth - Naruto"],"archer":["Piercing Arrow - Legolas","Hawkeye - Avengers"],"tank":["Shield Wall - Captain America","Iron Defense - AOT"],"necromancer":["Soul Drain - Solo Leveling","Shadow Army - Solo Leveling"],"swordmaster":["Dragon Smash - Zoro","Sword Dance - Demon Slayer"],"monarch":["Monarch Rule - Solo Leveling","Monarch Slash - Jinwoo"]}
+ANIME_RND=["Rasengan - Naruto","Chidori - Sasuke","Kamehameha - Goku","Bankai - Bleach","Gear 5 - Luffy","Domain Expansion - JJK","Susanoo - Naruto","Ultra Instinct - Goku"]
 POKEMONS=["Shadow Wolf","Fire Dragon","Ice Dragon","Thunder Wolf","Phoenix","Golden Tiger","Shadow Dragon","Light Dragon"]
-def assign_start_moves(p):
-    race=p.get("race","Human").lower(); cls=p.get("class","Warrior").lower()
-    moves=[]; moves+=ANIME_RACE_MOVES.get(race,["Slash - Zoro"])[:2]; moves+=ANIME_CLASS_MOVES.get(cls,["Slash - Zoro"])[:2]; moves+=[random.choice(ANIME_RANDOM)]; p["moves"]=moves
-    if cls=="monarch": p["atk"]=15+p["level"]*10; p["maxHp"]=100+p["level"]*30; p["hp"]=p["maxHp"]; p["mp"]=50+p["level"]*20; p["maxMp"]=p["mp"]
-    return moves
-JOBS={"cleaner":{"pay_zeni":5000,"pay_lgss":1},"driver":{"pay_zeni":12000,"pay_lgss":2},"hacker":{"pay_zeni":30000,"pay_lgss":5},"bank teller":{"pay_zeni":20000,"pay_lgss":3},"barber":{"pay_zeni":8000,"pay_lgss":1},"chef":{"pay_zeni":18000,"pay_lgss":3},"teacher":{"pay_zeni":20000,"pay_lgss":3},"farmer":{"pay_zeni":10000,"pay_lgss":2},"miner":{"pay_zeni":22000,"pay_lgss":4},"blacksmith":{"pay_zeni":25000,"pay_lgss":4},"hunter":{"pay_zeni":35000,"pay_lgss":6},"guard":{"pay_zeni":15000,"pay_lgss":2}}
-PETS={"Fire Dragon":{"cost_lgss":50,"ability":"Fire Breath"},"Ice Dragon":{"cost_lgss":50,"ability":"Ice Breath"},"Shadow Dragon":{"cost_lgss":100,"ability":"Shadow Bite"},"Light Dragon":{"cost_lgss":100,"ability":"Holy Light"},"Thunder Wolf":{"cost_lgss":30,"ability":"Thunder Bite"},"Phoenix":{"cost_lgss":200,"ability":"Rebirth"},"Shadow Wolf":{"cost_lgss":40,"ability":"Shadow Strike"},"Golden Tiger":{"cost_lgss":80,"ability":"Tiger Claw"}}
+JOBS={"cleaner":(5000,1),"driver":(12000,2),"hacker":(30000,5),"bank teller":(20000,3),"barber":(8000,1),"chef":(18000,3),"teacher":(20000,3),"farmer":(10000,2),"miner":(22000,4),"blacksmith":(25000,4),"hunter":(35000,6),"guard":(15000,2)}
+PETS={"Fire Dragon":(50,"Fire Breath"),"Ice Dragon":(50,"Ice Breath"),"Shadow Dragon":(100,"Shadow Bite"),"Light Dragon":(100,"Holy Light"),"Thunder Wolf":(30,"Thunder Bite"),"Phoenix":(200,"Rebirth"),"Shadow Wolf":(40,"Shadow Strike"),"Golden Tiger":(80,"Tiger Claw")}
 BOT_RULES=["1. No spamming / calling the bot","   (Auto Block)","2. No insults / nudity content","   (Ban)","3. No chatting bot in DM for spam","   ONLY group links allowed","   (Block)","4. Use /support to get support group link","5. Send link to bot DM","   It will join your group soon","6. Bot MUST be an admin of your group","7. Bot will join a group with 50+ members","8. Bot will NOT join back","   a group where it was removed","9. Bot will leave inactive & dead groups","10. Don't abuse bot or owner in any way","    (Ban)","11. Don't text mods asking to be mod","    (Ban)","12. Spamming in Casino or any group","    = 48 hours ban","13. Don't ask for bot script","    We are not giving / selling our bots","14. We are not accepting new mods now","    If we want, we will announce it","15. The kinder you are as INFINITY user","    The more rewards you will get"]
 GROUP_DESC_LINES=["⚡ INFINITY HUNTER ⚡","Web + WhatsApp SAME GAME","Owners: 0779798568 / Lord Infinity / Immortal Emperor","Start: /register YourName"]
-def can_see_supreme(p): return is_owner(p) or p.get("is_admin") or p.get("is_mob") or p.get("is_bot_admin") or p.get("is_group_admin")
+def can_supreme(p): return is_owner(p) or p.get("is_admin") or p.get("is_mob") or p.get("is_bot_admin") or p.get("is_group_admin")
 def stones_lines(p):
-    lines=[]; lines.append("💎 Spirit Stones"); lines.append(f"• LGSS - {fmt(p.get('lgss',0))}"); lines.append(f"• MGSS - {fmt(p.get('mgss',0))}"); lines.append(f"• HGSS - {fmt(p.get('hgss',0))}"); lines.append(f"• Zeni - {fmt(p.get('zeni',0))}"); lines.append(f"• Germ - {fmt(p.get('germ',0))}")
-    if can_see_supreme(p): lines.append(f"• Legendary - {fmt(p.get('legendary',0))}"); lines.append(f"• Supreme - {fmt(p.get('supreme',0))}")
-    return lines
-def give_reward(p, base_zeni=10000, base_lgss=5):
-    p["zeni"]=p.get("zeni",0)+base_zeni; out=[f"• Zeni - +{fmt(base_zeni)}"]
-    if random.random()<0.70: p["lgss"]=p.get("lgss",0)+base_lgss; out.append(f"• LGSS - +{base_lgss} (70% chance)")
+    L=["💎 Spirit Stones",f"• LGSS - {fmt(p.get('lgss',0))}",f"• MGSS - {fmt(p.get('mgss',0))}",f"• HGSS - {fmt(p.get('hgss',0))}",f"• Zeni - {fmt(p.get('zeni',0))}",f"• Germ - {fmt(p.get('germ',0))}"]
+    if can_supreme(p): L+=[f"• Legendary - {fmt(p.get('legendary',0))}",f"• Supreme - {fmt(p.get('supreme',0))}"]
+    return L
+def give_reward(p,bz=10000,bl=5):
+    p["zeni"]=p.get("zeni",0)+bz; out=[f"• Zeni - +{fmt(bz)}"]
+    if random.random()<0.70: p["lgss"]=p.get("lgss",0)+bl; out.append(f"• LGSS - +{bl} (70% chance)")
     if random.random()<0.30:
         g=random.randint(10,100); p["germ"]=p.get("germ",0)+g; out.append(f"• Germ - +{g} (30% chance)")
     if random.random()<0.10:
         p["supreme"]=p.get("supreme",0)+1
-        if can_see_supreme(p): out.append("• Supreme - +1 (10% chance)")
-        else: out.append("• ??? - +1 Hidden (10% Supreme - hidden)")
+        out.append("• Supreme - +1 (10% chance)" if can_supreme(p) else "• ??? - +1 Hidden (10% Supreme - hidden)")
     return out
-def convert_stones(p, frm, to, amt):
+def convert_stones(p,frm,to,amt):
     rates={"zeni":1,"germ":10,"lgss":100,"mgss":10000,"hgss":1000000,"legendary":100000000,"supreme":10000000000}
     if frm not in rates or to not in rates: return "Use: zeni germ lgss mgss hgss supreme"
-    if (frm=="supreme" or to=="supreme") and not can_see_supreme(p): return "❌ Only Owners/Admins/Mobs/Bot Admins can use Supreme"
-    have=p.get(frm,0)
-    if have<amt: return f"❌ Not enough {frm.upper()} - You have {fmt(have)}"
-    base=amt*rates[frm]; got=base//rates[to]; p[frm]-=amt; p[to]=p.get(to,0)+got
-    return f"✅ {fmt(amt)} {frm.upper()} → {fmt(got)} {to.upper()}"
+    if (frm=="supreme" or to=="supreme") and not can_supreme(p): return "❌ Only Owners/Admins/Mobs/Bot Admins can use Supreme"
+    if p.get(frm,0)<amt: return f"❌ Not enough {frm.upper()} - You have {fmt(p.get(frm,0))}"
+    base=amt*rates[frm]; got=base//rates[to]; p[frm]-=amt; p[to]=p.get(to,0)+got; return f"✅ {fmt(amt)} {frm.upper()} → {fmt(got)} {to.upper()}"
+def rank_for_gate(lvl):
+    if lvl>=500: return "SS"
+    if lvl>=300: return "S"
+    if lvl>=200: return "A"
+    if lvl>=100: return "B"
+    if lvl>=50: return "C"
+    if lvl>=20: return "D"
+    return "E"
+def rank_stats(rank): return {"E":(80,12,100),"D":(150,20,150),"C":(300,35,250),"B":(500,50,400),"A":(800,80,600),"S":(1200,120,1000),"SS":(2000,180,2000)}
+def maybe_spawn():
+    now=time.time()
+    if now-WORLD.get("last_dungeon_spawn",0)<900: return None
+    if random.random()<0.50: rank=random.choice(["A","S","SS"])
+    else: rank=random.choice(["E","E","D","C","B","B"])
+    WORLD["last_dungeon_spawn"]=now; WORLD["spawned_dungeon"]={"rank":rank,"expires":now+900,"beasts":["Beast 1","Beast 2","Beast 3"],"created":now}; save(); return rank
 DB_FILE="infinity_db.json"; BACKUPS=["backup1_1TB.json","backup2_1TB.json","backup3_1TB.json"]
-DB={"players":{},"market":[],"pending_pvp":{},"guilds":{},"dungeon":None,"groups":{},"auto_battle":False,"config":{"prefix":"/","prefixes":["/","."]},"pending_reg":{},"reports":[],"requests":[]}
-WORLD={"totalZeni":2000000000000,"totalPlayers":0,"labyrinth":None,"economy":BOT_ECONOMY}
+DB={"players":{},"market":[],"pending_pvp":{},"guilds":{},"dungeon":None,"groups":{},"auto_battle":False,"config":{"prefix":"/","prefixes":["/","."]},"pending_reg":{},"reports":[],"requests":[],"personal_gates":{},"catch_battle":None}
+WORLD={"totalZeni":2000000000000,"totalPlayers":0,"labyrinth":None,"economy":BOT_ECONOMY,"last_dungeon_spawn":0,"spawned_dungeon":None}
 def load_db():
     global DB,WORLD
     for f in [DB_FILE]+BACKUPS:
@@ -95,12 +103,17 @@ def gain_exp(p,amt):
     while p["exp"]>=exp_need(p["level"]):
         p["exp"]-=exp_need(p["level"]); p["level"]+=1; p["maxHp"]+=25; p["hp"]=p["maxHp"]; p["maxMp"]+=10; p["mp"]=p["maxMp"]; p["atk"]+=4; p["def"]+=3; p["spd"]+=3; p["agi"]=p.get("agi",10)+2; p["con"]=p.get("con",10)+2; p["rank"]=rank_for(p["level"])
     return amt
+def assign_moves(p):
+    r=p.get("race","Human").lower(); c=p.get("class","Warrior").lower()
+    m=[]; m+=ANIME_R.get(r,["Slash - Zoro"])[:2]; m+=ANIME_C.get(c,["Slash - Zoro"])[:2]; m+=[random.choice(ANIME_RND)]; p["moves"]=m
+    if c=="monarch": p["atk"]=15+p["level"]*10; p["maxHp"]=100+p["level"]*30; p["hp"]=p["maxHp"]; p["mp"]=50+p["level"]*20; p["maxMp"]=p["mp"]
+    return m
 def get_player(pid,name="Player"):
     if pid not in DB["players"]:
         now=cat_now()
-        DB["players"][pid]={"id":pid,"name":name,"displayName":name,"registered":False,"password":"","race":"","class":"","level":1,"exp":0,"zeni":1000000,"germ":0,"lgss":10,"mgss":0,"hgss":0,"legendary":0,"supreme":0,"bank":0,"bank_open":False,"savings":0,"hp":100,"maxHp":100,"mp":50,"maxMp":50,"atk":15,"def":10,"spd":12,"agi":10,"con":10,"rank":"E - Novice","wins":0,"losses":0,"dungeonClears":0,"dungeon_floor":1,"checkpoint":1,"kills":0,"job":"Unemployed","loan":0,"loanDue":0,"house":"None","houseTier":0,"car":"None","shop":"None","pet":None,"guild":"None","guildRank":"None","lastDaily":0,"lastWork":0,"lastClaim":0,"lastRob":0,"jailed":0,"banned":False,"questsDone":0,"notifications":[],"gender":"Not Set","age":15,"lifespan":80,"birthday":now.strftime("%d %b %Y"),"spouse":None,"title":"Adventurer","titles":["Adventurer"],"cultRealm":0,"cultLayer":1,"cultXp":0,"cultNeed":100,"talentType":"","talentValue":"","talentGrade":"","isInfinity":False,"isChosen":False,"chosenUntil":0,"wood":0,"houseBuilt":False,"sect":"No Sect","sectRank":"-","hunger":100,"family":"No Family","party":"No Party","church":"No Church","inventory":{},"skills":[],"active_skills":[],"awaiting_move_until":0,"gems":5,"str":0,"int":0,"vit":0,"luk":0,"bio":"","emoji":"⚔️","hunger_lvl":100,"cooking":1,"achievements":[],"reg_stage":"none","is_admin":False,"is_mob":False,"is_bot_admin":False,"is_group_admin":False,"moves":[],"reg_step":"","pokemon":None,"pokemon_hp":0}
+        DB["players"][pid]={"id":pid,"name":name,"displayName":name,"registered":False,"password":"","race":"","class":"","level":1,"exp":0,"zeni":1000000,"germ":0,"lgss":10,"mgss":0,"hgss":0,"legendary":0,"supreme":0,"bank":0,"bank_open":False,"savings":0,"hp":100,"maxHp":100,"mp":50,"maxMp":50,"atk":15,"def":10,"spd":12,"agi":10,"con":10,"rank":"E - Novice","wins":0,"losses":0,"dungeonClears":0,"dungeon_floor":1,"checkpoint":1,"kills":0,"job":"Unemployed","loan":0,"loanDue":0,"house":"None","houseTier":0,"car":"None","shop":"None","pet":None,"guild":"None","guildRank":"None","lastDaily":0,"lastWork":0,"lastClaim":0,"lastRob":0,"jailed":0,"banned":False,"questsDone":0,"notifications":[],"gender":"Not Set","age":15,"lifespan":80,"birthday":now.strftime("%d %b %Y"),"spouse":None,"title":"Adventurer","titles":["Adventurer"],"cultRealm":0,"cultLayer":1,"cultXp":0,"cultNeed":100,"talentType":"","talentValue":"","talentGrade":"","isInfinity":False,"isChosen":False,"chosenUntil":0,"wood":0,"houseBuilt":False,"sect":"No Sect","sectRank":"-","hunger":100,"family":"No Family","party":"No Party","church":"No Church","inventory":{},"skills":[],"active_skills":[],"awaiting_move_until":0,"gems":5,"str":0,"int":0,"vit":0,"luk":0,"bio":"","emoji":"⚔️","hunger_lvl":100,"cooking":1,"achievements":[],"reg_stage":"none","is_admin":False,"is_mob":False,"is_bot_admin":False,"is_group_admin":False,"moves":[],"reg_step":"","pokemon":None}
         WORLD["totalPlayers"]+=1
-    for k,v in {"germ":0,"lgss":10,"mgss":0,"hgss":0,"legendary":0,"supreme":0,"moves":[],"is_admin":False,"is_mob":False,"is_bot_admin":False,"is_group_admin":False,"reg_step":"","race":"","class":"","pokemon":None,"pokemon_hp":0}.items():
+    for k,v in {"germ":0,"lgss":10,"mgss":0,"hgss":0,"legendary":0,"supreme":0,"moves":[],"is_admin":False,"is_mob":False,"is_bot_admin":False,"is_group_admin":False,"reg_step":"","race":"","class":"","pokemon":None}.items():
         if k not in DB["players"][pid]: DB["players"][pid][k]=v
     return DB["players"][pid]
 def get_player_by_name(name):
@@ -111,356 +124,177 @@ def box_str(title,lines):
     out=f"⏰ {cat_now().strftime('%H:%M:%S CAT | %d %b %Y')}\n"+"="*54+"\n "+title+"\n"+"="*54+"\n"
     for l in lines: out+="  "+l+"\n"
     out+="="*54; return out
-def get_my_moves(p): return p.get("moves",[]) or assign_start_moves(p)
-def dungeon_stats_for_floor(floor):
-    hp=80+floor*30; atk=12+floor*3; exp=100+floor*20; style="Low ATK High HP"
-    if floor%2==0: style="High ATK Low HP"; hp=int(hp*0.7); atk=int(atk*1.4)
-    return hp,atk,exp,style
-def start_dungeon(p):
-    floor=p.get("dungeon_floor",1); hp,atk,exp,style=dungeon_stats_for_floor(floor)
-    # Dungeon can be Boss OR wild Pokemon - 50/50
-    is_poke=random.random()<0.5; enemy=random.choice(POKEMONS) if is_poke else f"Floor {floor} Boss"
-    DB["dungeon"]={"enemy":enemy,"enemy_hp":hp,"enemy_max":hp,"enemy_atk":atk,"floor":floor,"exp":exp,"in_dungeon":True,"style":style,"is_pokemon":is_poke}
-    save()
-    return box_str("🏰 DUNGEON FLOOR "+str(floor),[f"👹 Enemy: {enemy}",f"🎨 Style: {style}",f"❤️ Enemy HP: {hp}",f"⚔️ Enemy ATK: {atk}",f"🐉 Type: {'Pokemon' if is_poke else 'Boss'}",f"📍 Checkpoint: Floor {p.get('checkpoint',1)}","Type /moves to see moves","Then /moves <number> to attack"])
-def use_move_in_dungeon(p,num_or_name):
+def get_my_moves(p): return p.get("moves",[]) or assign_moves(p)
+def start_dungeon(p,rank=None,is_gate=False,is_spawned=False):
+    floor=p.get("dungeon_floor",1)
+    if rank: hp,atk,exp=rank_stats(rank); enemy=f"{rank} Rank Beast"
+    else: hp=80+floor*30; atk=12+floor*3; exp=100+floor*20; enemy=f"Floor {floor} Boss"
+    DB["dungeon"]={"enemy":enemy,"enemy_hp":hp,"enemy_max":hp,"enemy_atk":atk,"floor":floor,"exp":exp,"in_dungeon":True,"rank":rank,"is_gate":is_gate,"is_spawned":is_spawned}; save()
+    return box_str("🏰 DUNGEON ENTERED",[f"• Enemy: {enemy}",f"• Rank: {rank or 'Floor '+str(floor)}",f"• Enemy HP: {hp}",f"• Enemy ATK: {atk}",f"• Type: {'Personal Gate' if is_gate else 'Spawned Dungeon' if is_spawned else 'Dungeon'}","• Type /moves to see moves","• Then /moves <number> to attack"])
+def use_move_dungeon(p,num):
     d=DB.get("dungeon")
-    if not d or not d.get("in_dungeon"): return "❌ NOT in dungeon. Type /dungeon enter"
+    if not d or not d.get("in_dungeon"):
+        cb=DB.get("catch_battle")
+        if cb and cb.get("active"): return use_move_catch(p,num)
+        return "❌ NOT in dungeon. Type /dungeon enter"
     moves=get_my_moves(p)
-    try: idx=int(num_or_name)-1; mv_name=moves[idx] if 0<=idx<len(moves) else None
-    except: mv_name=num_or_name
-    if not mv_name: return "❌ Move not found. Type /moves"
-    p["mp"]=max(0,p["mp"]-10); dmg=20+p["atk"]+random.randint(0,10); d["enemy_hp"]-=dmg; out=[f"⚔️ You used {mv_name}",f"• Damage: {dmg}",f"• Enemy: {d['enemy']}",f"• Enemy HP: {max(0,d['enemy_hp'])}"]
+    try: idx=int(num)-1; mv=moves[idx] if 0<=idx<len(moves) else None
+    except: mv=num
+    if not mv: return "❌ Move not found. Type /moves"
+    p["mp"]=max(0,p["mp"]-10); dmg=20+p["atk"]+random.randint(0,10); d["enemy_hp"]-=dmg; out=[f"⚔️ You used {mv}",f"• Damage: {dmg}",f"• Enemy: {d['enemy']}",f"• Enemy HP: {max(0,d['enemy_hp'])}"]
     if d["enemy_hp"]<=0:
-        gain_exp(p,d["exp"]); p["dungeonClears"]+=1; cleared=d["floor"]; p["dungeon_floor"]=cleared+1; DB["dungeon"]=None; rew=give_reward(p,10000,5); save()
-        lines=[f"• Floor {cleared} cleared",f"• EXP: +{d['exp']}"]+rew+[f"• Next: {cleared+1}"]
-        if d.get("is_pokemon"): lines.append(f"• Pokemon defeated: {d['enemy']}")
-        return box_str("🎉 FLOOR CLEARED",lines)
+        gain_exp(p,d["exp"]); p["dungeonClears"]+=1; cl=d["floor"]; p["dungeon_floor"]=cl+1; DB["dungeon"]=None; rew=give_reward(p,10000,5); save(); return box_str("🎉 FLOOR CLEARED",[f"• Floor {cl} cleared",f"• EXP: +{d['exp']}"]+rew+[f"• Next: {cl+1}"])
     edmg=max(1,d["enemy_atk"]+random.randint(0,10)-p["def"]//2); p["hp"]-=edmg; out.append(f"• Boss hit: -{edmg}"); out.append(f"• Your HP: {max(0,p['hp'])}")
-    if p["hp"]<=0: p["hp"]=1; respawn=p.get("checkpoint",1); p["dungeon_floor"]=respawn; DB["dungeon"]=None; save(); return box_str("💀 YOU DIED",[f"• Died Floor {d['floor']}",f"• Respawn Floor {respawn}"])
+    if p["hp"]<=0: p["hp"]=1; rs=p.get("checkpoint",1); p["dungeon_floor"]=rs; DB["dungeon"]=None; save(); return box_str("💀 YOU DIED",[f"• Died Floor {d['floor']}",f"• Respawn Floor {rs}"])
     save(); return "\n".join(out)+"\nYour turn! /moves <number>"
-def apply_owner_perks(p):
+def start_catch(p):
+    mon=random.choice(POKEMONS); hp=100+p["level"]*10; atk=10+p["level"]*2; DB["catch_battle"]={"pokemon":mon,"hp":hp,"max":hp,"atk":atk,"active":True,"owner":p["id"]}; save()
+    return box_str("🎯 CATCH BATTLE STARTED",[f"• Wild Pokemon: {mon}",f"• Pokemon HP: {hp}",f"• Pokemon ATK: {atk}","• Fight it with /moves","• If you win, you catch it!","• No cheat - real battle"])
+def use_move_catch(p,num):
+    cb=DB.get("catch_battle")
+    if not cb or not cb.get("active"): return "❌ No catch battle. Type /catch"
+    if cb.get("owner")!=p["id"]: return "❌ This catch battle is not yours"
+    moves=get_my_moves(p)
+    try: idx=int(num)-1; mv=moves[idx] if 0<=idx<len(moves) else None
+    except: mv=num
+    if not mv: return "❌ Move not found. Type /moves"
+    p["mp"]=max(0,p["mp"]-10); dmg=20+p["atk"]+random.randint(0,10); cb["hp"]-=dmg; out=[f"⚔️ You used {mv}",f"• Damage: {dmg}",f"• Pokemon: {cb['pokemon']}",f"• Pokemon HP: {max(0,cb['hp'])}"]
+    if cb["hp"]<=0:
+        p["pokemon"]=cb["pokemon"]; p["pet"]=cb["pokemon"]; gain_exp(p,100); DB["catch_battle"]=None; save(); return box_str("🎉 CAUGHT!",[f"• You caught: {p['pokemon']}",f"• EXP: +100","• Type /pokemon to see it"])
+    edmg=max(1,cb["atk"]+random.randint(0,5)-p["def"]//2); p["hp"]-=edmg; out.append(f"• Pokemon hit: -{edmg}"); out.append(f"• Your HP: {max(0,p['hp'])}")
+    if p["hp"]<=0: p["hp"]=1; DB["catch_battle"]=None; save(); return box_str("💀 YOU LOST CATCH",[f"• Pokemon: {cb['pokemon']} escaped",f"• Your HP: 1","• Try again: /catch"])
+    save(); return "\n".join(out)+"\nYour turn! /moves <number>"
+def apply_owner(p):
     p["isInfinity"]=True; p["isChosen"]=True; p["race"]="God"; p["atk"]=100; p["maxHp"]=300; p["hp"]=300; p["mp"]=9999; p["maxMp"]=9999; p["title"]="Immortal Emperor"; p["supreme"]=100; p["legendary"]=100
     if "Immortal Emperor" not in p.get("titles",[]): p["titles"].append("Immortal Emperor")
-def apply_register_details(p, race_raw, gender_raw, class_raw=""):
+def apply_reg(p,race_raw,gender_raw,class_raw=""):
     if race_raw and race_raw.lower() in RACES:
         if race_raw.lower()=="god" and not is_owner(p) and p.get("displayName","").lower() not in OWNER_NAMES: return "God only for Owners"
-        p["race"]=RACES[race_raw.lower()]["name"]
+        p["race"]=RACES[race_raw.lower()]
     if gender_raw and gender_raw.lower() in ["male","female"]: p["gender"]=gender_raw.capitalize()
     if class_raw and class_raw.lower() in CLASSES:
-        if class_raw.lower()=="monarch" and not can_see_supreme(p): return "Monarch only for appointed"
-        p["class"]=CLASSES[class_raw.lower()]["name"]
-    if p.get("displayName","").lower() in OWNER_NAMES: apply_owner_perks(p)
-    assign_start_moves(p); return None
-def promote_to_monarch(p, role):
+        if class_raw.lower()=="monarch" and not can_supreme(p): return "Monarch only for appointed"
+        p["class"]=CLASSES[class_raw.lower()]
+    if p.get("displayName","").lower() in OWNER_NAMES: apply_owner(p)
+    assign_moves(p); return None
+def promote_monarch(p,role):
     p["class"]="Monarch"
     if role=="mob": p["is_mob"]=True
     if role=="admin": p["is_admin"]=True
     if role=="botadmin": p["is_bot_admin"]=True
     if role=="groupadmin": p["is_group_admin"]=True
-    assign_start_moves(p); save(); return p
-def welcome_message(name, group_name="This Group"):
-    L=[]; L.append(f"👋 Welcome @{name}!"); L.append(""); L.append("🏰 Welcome to INFINITY HUNTER"); L.append(f"👥 Group: {group_name}"); L.append(""); L.append("📜 GROUP DESCRIPTION:")
+    assign_moves(p); save(); return p
+def welcome_message(name,group_name="This Group"):
+    L=[f"👋 Welcome @{name}!","","🏰 Welcome to INFINITY HUNTER",f"👥 Group: {group_name}","","📜 GROUP DESCRIPTION:"]
     for d in GROUP_DESC_LINES: L.append(f"• {d}")
     L.append(""); L.append("📏 BOT RULES:")
     for r in BOT_RULES: L.append(f"• {r}")
-    L.append(""); L.append("👉 START HERE:"); L.append("• /register YourName"); L.append("• /register YourName GOD Warrior Male"); L.append("• /rules"); L.append("• /menu"); L.append("• /support")
-    return box_str("👋 WELCOME TO INFINITY", L)
-===== /help - NO LABELS - PURE LISTING ONLY =====
+    L+=["","👉 START HERE:","• /register YourName","• /register YourName GOD Warrior Male","• /rules","• /menu","• /support"]
+    return box_str("👋 WELCOME TO INFINITY",L)
 def menu_text(p):
-    pre=get_prefix(); tag=f"@{p['displayName']}"
-    L=[]
-    L.append("⚡ INFINITY Hunter")
-    L.append(f"• 👤 {tag}")
-    L.append(f"• 🏷️ {p.get('title','Adventurer')}")
-    L.append(f"• 💠 Lv{p['level']}")
-    L.append(f"• 🧬 {p.get('race','-')}")
-    L.append(f"• ⚔️ {p.get('class','-')}")
-    L.append(f"• 🔑 Prefix: {pre}")
-    L.append(f"• 📝 {pre}register <name>")
-    L.append(f"• 📊 {pre}stats")
-    L.append(f"• 👤 {pre}profile")
-    L.append(f"• 💎 {pre}stones")
-    L.append(f"• 🔄 {pre}exchange <from> <to> <amt>")
-    L.append(f"• 🧬 {pre}races")
-    L.append(f"• ⚔️ {pre}classes")
-    L.append(f"• ✏️ {pre}rename <name>")
-    L.append(f"• ℹ️ {pre}info")
-    L.append(f"• 💰 {pre}economy")
-    L.append(f"• 📜 {pre}help")
-    L.append(f"• 🏓 {pre}ping")
-    L.append(f"• 📏 {pre}rules")
-    L.append(f"• 👋 {pre}welcome @user")
-    L.append(f"• 🆘 {pre}support")
-    L.append(f"• ❓ {pre}faq")
-    L.append(f"• 👋 {pre}hi")
-    L.append(f"• 👥 {pre}mods")
-    L.append(f"• 🏆 {pre}rank")
-    L.append(f"• 🔄 {pre}reset-icon")
-    L.append(f"• 📦 {pre}repo")
-    L.append(f"• 🧹 {pre}reset-bio")
-    L.append(f"• 🧹 {pre}reset-username")
-    L.append(f"• 📝 {pre}set-bio <text>")
-    L.append(f"• 🖼️ {pre}set-icon <emoji>")
-    L.append(f"• ✏️ {pre}set-username <name>")
-    L.append(f"• 🔑 {pre}webpass")
-    L.append(f"• 👤 {pre}webuser")
-    L.append(f"• 📅 {pre}card-events")
-    L.append(f"• ⚔️ {pre}pvp @user")
-    L.append(f"• ✨ {pre}skill cast <magic> @user")
-    L.append(f"• 🔥 {pre}skill activate <name>")
-    L.append(f"• 🚫 {pre}skill deactivate <name>")
-    L.append(f"• 🗡️ {pre}move <move>")
-    L.append(f"• 📜 {pre}moves")
-    L.append(f"• 📚 {pre}mymoves")
-    L.append(f"• 🎓 {pre}learn")
-    L.append(f"• ✅ {pre}accept")
-    L.append(f"• ❌ {pre}decline")
-    L.append(f"• 🏳️ {pre}forfeit")
-    L.append(f"• 🎒 {pre}bag")
-    L.append(f"• ⚔️ {pre}battle")
-    L.append(f"• ⚔️ {pre}challenge @user")
-    L.append(f"• 📖 {pre}bestiary")
-    L.append(f"• 🧥 {pre}equip <item>")
-    L.append(f"• 🎁 {pre}givepoke @user <poke>")
-    L.append(f"• 💊 {pre}heal")
-    L.append(f"• 🛒 {pre}mart")
-    L.append(f"• 🛍️ {pre}mart-buy <item>")
-    L.append(f"• 👥 {pre}party")
-    L.append(f"• 💻 {pre}pc")
-    L.append(f"• 🐉 {pre}pokemon")
-    L.append(f"• ✨ {pre}spawnpokemon")
-    L.append(f"• 🚀 {pre}start-journey")
-    L.append(f"• 🔄 {pre}swap <a> <b>")
-    L.append(f"• 🔄 {pre}t2party <poke>")
-    L.append(f"• 🔄 {pre}t2pc <poke>")
-    L.append(f"• 🔄 {pre}trade @user <poke>")
-    L.append(f"• ✅ {pre}trade-confirm")
-    L.append(f"• ❌ {pre}trade-delete")
-    L.append(f"• 🧥 {pre}unequip <item>")
-    L.append(f"• 🚫 {pre}cancel-evolution")
-    L.append(f"• 🏰 {pre}dungeon enter")
-    L.append(f"• 🎒 {pre}inventory")
-    L.append(f"• 🧪 {pre}use <item>")
-    L.append(f"• 🧴 {pre}use Small Heal")
-    L.append(f"• 🧴 {pre}use Medium Heal")
-    L.append(f"• 🧴 {pre}use MP Potion")
-    L.append(f"• 🧴 {pre}use Phoenix Elixir")
-    L.append(f"• 💸 {pre}sell <item>")
-    L.append(f"• 👥 {pre}party create <name>")
-    L.append(f"• 📩 {pre}party invite @user")
-    L.append(f"• ✅ {pre}party accept")
-    L.append(f"• 🚪 {pre}party leave")
-    L.append(f"• 👢 {pre}party kick @user")
-    L.append(f"• 🌀 {pre}labyrinth status")
-    L.append(f"• 👥 {pre}labyrinth team create")
-    L.append(f"• 📩 {pre}labyrinth team invite")
-    L.append(f"• ✅ {pre}labyrinth team accept")
-    L.append(f"• 🚪 {pre}labyrinth enter")
-    L.append(f"• ⚔️ {pre}labyrinth attack")
-    L.append(f"• 🏠 {pre}family found <name>")
-    L.append(f"• ➕ {pre}family add @user")
-    L.append(f"• ✅ {pre}family accept")
-    L.append(f"• 🚪 {pre}family leave")
-    L.append(f"• ℹ️ {pre}family info")
-    L.append(f"• 🛡️ {pre}raid")
-    L.append(f"• ➕ {pre}raid join")
-    L.append(f"• ▶️ {pre}raid start")
-    L.append(f"• ⚔️ {pre}raid attack")
-    L.append(f"• 🎁 {pre}raid claim")
-    L.append(f"• 🪞 {pre}arena")
-    L.append(f"• 🎟️ {pre}arena enter")
-    L.append(f"• ⚔️ {pre}arena fight")
-    L.append(f"• 🏛️ {pre}guild")
-    L.append(f"• 📝 {pre}guild apply")
-    L.append(f"• ℹ️ {pre}guild info")
-    L.append(f"• 👥 {pre}guild members")
-    L.append(f"• 📜 {pre}guild quest")
-    L.append(f"• 💰 {pre}guild fund")
-    L.append(f"• ➕ {pre}guild create")
-    L.append(f"• 🚪 {pre}guild join")
-    L.append(f"• ⛪ {pre}church")
-    L.append(f"• 🙏 {pre}church join <god>")
-    L.append(f"• 🙏 {pre}pray")
-    L.append(f"• 🎁 {pre}daily")
-    L.append(f"• 👛 {pre}wallet")
-    L.append(f"• 🏦 {pre}bank")
-    L.append(f"• 🛒 {pre}shop")
-    L.append(f"• 🛍️ {pre}buy <item>")
-    L.append(f"• 💝 {pre}give @user <amt>")
-    L.append(f"• 💼 {pre}job list")
-    L.append(f"• 📝 {pre}job apply <job>")
-    L.append(f"• 🔨 {pre}job work")
-    L.append(f"• ℹ️ {pre}job info")
-    L.append(f"• 💍 {pre}marry @user")
-    L.append(f"• ✅ {pre}marry accept")
-    L.append(f"• 💔 {pre}divorce")
-    L.append(f"• 🏠 {pre}house buy")
-    L.append(f"• ⬆️ {pre}house upgrade")
-    L.append(f"• ℹ️ {pre}house info")
-    L.append(f"• 🏘️ {pre}rental list")
-    L.append(f"• 🐉 {pre}pet list")
-    L.append(f"• 🥚 {pre}pet buy <type>")
-    L.append(f"• 🏷️ {pre}pet name <name>")
-    L.append(f"• 🏋️ {pre}pet train")
-    L.append(f"• ℹ️ {pre}pet info")
-    L.append(f"• 🎨 {pre}sticker")
-    L.append(f"• 🔊 {pre}deaudio")
-    L.append(f"• 📘 {pre}facebook <url>")
-    L.append(f"• 🔍 {pre}gisearch <query>")
-    L.append(f"• 📸 {pre}instagram <url>")
-    L.append(f"• 🎵 {pre}lyrics <song>")
-    L.append(f"• 📌 {pre}pinterest <query>")
-    L.append(f"• 🎵 {pre}play <song>")
-    L.append(f"• 🎧 {pre}soundcloud <song>")
-    L.append(f"• 🎵 {pre}spotify <song>")
-    L.append(f"• 🟠 {pre}subreddit <name>")
-    L.append(f"• 🎵 {pre}tiktok <url>")
-    L.append(f"• 🐦 {pre}twitter <url>")
-    L.append(f"• ▶️ {pre}yta <query>")
-    L.append(f"• 🔍 {pre}yts <query>")
-    L.append(f"• 📺 {pre}ytv <query>")
-    L.append(f"• 🛒 {pre}market")
-    L.append(f"• 📝 {pre}market list")
-    L.append(f"• 🛍️ {pre}market buy <id>")
-    L.append(f"• 📢 {pre}report <text>")
-    L.append(f"• 📝 {pre}request <text>")
-    L.append(f"• 📋 {pre}check reports")
-    L.append(f"• 🏆 {pre}leaderboard")
-    L.append(f"• 👑 {pre}monarchs")
-    L.append(f"• 🥷 {pre}rob @user <amt>")
-    L.append(f"• 🏦 {pre}rob bank <amt>")
-    L.append(f"• 💰 {pre}bail")
-    L.append(f"• 🚨 {pre}wanted")
-    L.append(f"• 🏥 {pre}hospital")
-    L.append(f"• 🩺 {pre}hospital checkup")
-    L.append(f"• 💊 {pre}hospital treat")
-    L.append(f"• 🏦 {pre}bank register")
-    L.append(f"• 💰 {pre}bank deposit <amt>")
-    L.append(f"• 💵 {pre}bank withdraw <amt>")
-    L.append(f"• 💸 {pre}bank transfer @user <amt>")
-    L.append(f"• 🧮 {pre}calculator <expr>")
-    L.append(f"• 🎨 {pre}carbon <code>")
-    L.append(f"• 🎥 {pre}coubs <url>")
-    L.append(f"• 🪙 {pre}crypto <coin>")
-    L.append(f"• 🖼️ {pre}img <query>")
-    L.append(f"• 💬 {pre}quotly <text>")
-    L.append(f"• 😀 {pre}react <emoji>")
-    L.append(f"• 📥 {pre}retrieve")
-    L.append(f"• 📸 {pre}screenshot <url>")
-    L.append(f"• 🥷 {pre}steal <sticker>")
-    L.append(f"• ✈️ {pre}telesticker <url>")
-    L.append(f"• 📍 {pre}track <number>")
-    L.append(f"• 🌐 {pre}translator <text>")
-    L.append(f"• ❓ {pre}trivia")
-    L.append(f"• 📤 {pre}upload")
-    L.append(f"• 📖 {pre}urbandictionary <word>")
-    L.append(f"• 📚 {pre}wikipedia <query>")
-    L.append(f"• 🎌 {pre}anime <name>")
-    L.append(f"• 👤 {pre}character <name>")
-    L.append(f"• 🌈 {pre}diverse")
-    L.append(f"• 🦊 {pre}foxgirl")
-    L.append(f"• 💖 {pre}waifu")
-    L.append(f"• 🚫 {pre}banlist")
-    L.append(f"• 🤖 {pre}chatbot on/off")
-    L.append(f"• 🚪 {pre}join")
-    L.append(f"• 🚪 {pre}leave")
-    L.append(f"• 📋 {pre}roleslist")
-    L.append(f"• 📅 {pre}set-event <text>")
-    L.append(f"• 🔄 {pre}switch")
-    L.append(f"• ➕ {pre}addmod @user")
-    L.append(f"• ➕ {pre}addsudo @user")
-    L.append(f"• 🚫 {pre}ban @user")
-    L.append(f"• 🗑️ {pre}del-battle")
-    L.append(f"• ➖ {pre}delmod @user")
-    L.append(f"• ➖ {pre}delsudo @user")
-    L.append(f"• ✅ {pre}unban @user")
-    L.append(f"• ⬆️ {pre}promote @user")
-    L.append(f"• ⬇️ {pre}demote @user")
-    L.append(f"• ➕ {pre}addadmin @user")
-    L.append(f"• 👹 {pre}addmob @user")
-    L.append(f"• 🤖 {pre}addbotadmin @user")
-    L.append(f"• 👮 {pre}addgroupadmin @user")
-    L.append(f"• 🐲 {pre}worldboss")
-    L.append(f"• 🏰 {pre}demoncastle")
-    L.append(f"• 🔥 {pre}rebirth")
+    pre=get_prefix(); tag=f"@{p['displayName']}"; L=[]
+    L+=["⚡ INFINITY Hunter",f"• 👤 {tag}",f"• 🏷️ {p.get('title','Adventurer')}",f"• 💠 Lv{p['level']}",f"• 🧬 {p.get('race','-')}",f"• ⚔️ {p.get('class','-')}",f"• 🔑 Prefix: {pre}"]
+    L.append("📋 GENERAL")
+    for c in ["register <name>","stats","profile","stones","exchange <from> <to> <amt>","races","classes","rename <name>","info","economy","help","ping","rules","welcome @user","support","faq","hi","mods","rank","reset-icon","repo","reset-bio","reset-username","set-bio <text>","set-icon <emoji>","set-username <name>","webpass","webuser","card-events"]: L.append(f"• {pre}{c}")
+    L.append("⚔️ BATTLE")
+    for c in ["pvp @user","skill cast <magic> @user","skill activate <name>","skill deactivate <name>","move <move>","moves","mymoves","learn","accept","decline","forfeit"]: L.append(f"• {pre}{c}")
+    L.append("🐉 CATCH - ALONE (Battle)")
+    for c in ["catch","bag","battle","challenge @user","bestiary","equip <item>","givepoke @user <poke>","heal","mart","mart-buy <item>","party","pc","pokemon","spawnpokemon","start-journey","swap <a> <b>","t2party <poke>","t2pc <poke>","trade @user <poke>","trade-confirm","trade-delete","unequip <item>","cancel-evolution"]: L.append(f"• {pre}{c}")
+    L.append("🏰 DUNGEON - ALONE")
+    for c in ["dungeon enter","dungeon gate enter","gate","enter","inventory","use <item>","sell <item>"]: L.append(f"• {pre}{c}")
+    L.append("👥 PARTY")
+    for c in ["party create <name>","party invite @user","party accept","party leave","party kick @user"]: L.append(f"• {pre}{c}")
+    L.append("🌀 LABYRINTH")
+    for c in ["labyrinth status","labyrinth team create","labyrinth team invite","labyrinth team accept","labyrinth enter","labyrinth attack"]: L.append(f"• {pre}{c}")
+    L.append("🏠 FAMILY")
+    for c in ["family found <name>","family add @user","family accept","family leave","family info"]: L.append(f"• {pre}{c}")
+    L.append("🛡️ COUNTRY RAIDS")
+    for c in ["raid","raid join","raid start","raid attack","raid claim"]: L.append(f"• {pre}{c}")
+    L.append("🪞 HALL OF REFLECTIONS")
+    for c in ["arena","arena enter","arena fight"]: L.append(f"• {pre}{c}")
+    L.append("🏛️ GUILD")
+    for c in ["guild","guild apply","guild info","guild members","guild quest","guild fund","guild create","guild join"]: L.append(f"• {pre}{c}")
+    L.append("⛪ CHURCH")
+    for c in ["church","church join <god>","pray"]: L.append(f"• {pre}{c}")
+    L.append("💰 ECONOMY")
+    for c in ["daily","stones","wallet","bank","shop","buy <item>","give @user <amt>"]: L.append(f"• {pre}{c}")
+    L.append("💼 JOBS")
+    for c in ["job list","job apply <job>","job work","job info"]: L.append(f"• {pre}{c}")
+    L.append("💍 MARRIAGE")
+    for c in ["marry @user","marry accept","divorce"]: L.append(f"• {pre}{c}")
+    L.append("🏠 HOUSING")
+    for c in ["house buy","house upgrade","house info","rental list"]: L.append(f"• {pre}{c}")
+    L.append("🐉 PETS")
+    for c in ["pet list","pet buy <type>","pet name <name>","pet train","pet info"]: L.append(f"• {pre}{c}")
+    L.append("🎨 MEDIA")
+    for c in ["sticker","deaudio","facebook <url>","gisearch <query>","instagram <url>","lyrics <song>","pinterest <query>","play <song>","soundcloud <song>","spotify <song>","subreddit <name>","tiktok <url>","twitter <url>","yta <query>","yts <query>","ytv <query>"]: L.append(f"• {pre}{c}")
+    L.append("🛒 MARKET")
+    for c in ["market","market list","market buy <id>"]: L.append(f"• {pre}{c}")
+    L.append("📢 REPORTS")
+    for c in ["report <text>","request <text>","check reports"]: L.append(f"• {pre}{c}")
+    L.append("🏆 LEADERBOARDS")
+    for c in ["leaderboard","monarchs"]: L.append(f"• {pre}{c}")
+    L.append("⚖️ CRIME")
+    for c in ["rob @user <amt>","rob bank <amt>","bail","wanted"]: L.append(f"• {pre}{c}")
+    L.append("🏥 HOSPITAL")
+    for c in ["hospital","hospital checkup","hospital treat"]: L.append(f"• {pre}{c}")
+    L.append("🏦 BANK")
+    for c in ["bank","bank register","bank deposit <amt>","bank withdraw <amt>","bank transfer @user <amt>"]: L.append(f"• {pre}{c}")
+    L.append("🛠️ UTILS")
+    for c in ["calculator <expr>","carbon <code>","coubs <url>","crypto <coin>","img <query>","quotly <text>","react <emoji>","retrieve","screenshot <url>","steal <sticker>","telesticker <url>","track <number>","translator <text>","trivia","upload","urbandictionary <word>","wikipedia <query>"]: L.append(f"• {pre}{c}")
+    L.append("🌸 WEEB")
+    for c in ["anime <name>","character <name>","diverse","foxgirl","waifu"]: L.append(f"• {pre}{c}")
+    L.append("🛡️ MODS")
+    for c in ["banlist","chatbot on/off","join","leave","roleslist","set-event <text>","switch"]: L.append(f"• {pre}{c}")
+    L.append("👮 OFFICER")
+    for c in ["addmod @user","addsudo @user","ban @user","del-battle","delmod @user","delsudo @user","unban @user"]: L.append(f"• {pre}{c}")
+    L.append("🛡️ STAFF")
+    for c in ["promote @user","demote @user","addadmin @user","addmob @user","addbotadmin @user","addgroupadmin @user"]: L.append(f"• {pre}{c}")
+    L.append("🐲 WORLD BOSS")
+    for c in ["worldboss","demoncastle"]: L.append(f"• {pre}{c}")
+    L.append("🔥 REBIRTH")
+    L.append(f"• {pre}rebirth")
     L.append(f"• 💡 Tip: {tag} Type {pre}profile")
-    return box_str("⚡ INFINITY Hunter", L)
+    return box_str("⚡ INFINITY Hunter",L)
 def owner_help(p):
-    pre=get_prefix(); L=[]
-    L.append("• 👑 OWNER MENU")
-    L.append(f"• 👑 {pre}setprefix <new>")
-    L.append(f"• 📢 {pre}broadcast <msg>")
-    L.append(f"• 👹 {pre}addmob @user")
-    L.append(f"• ➕ {pre}addadmin @user")
-    L.append(f"• 🤖 {pre}addbotadmin @user")
-    L.append(f"• 👮 {pre}addgroupadmin @user")
-    L.append(f"• 🛡️ {pre}kick @user")
-    L.append(f"• 🚫 {pre}ban @user")
-    L.append(f"• ✅ {pre}unban @user")
-    L.append(f"• 🔇 {pre}sybau @user")
-    L.append(f"• 📊 {pre}check reports")
-    L.append(f"• 🔧 {pre}setstats <stat> <val>")
-    L.append(f"• 🌀 {pre}labyrinth force")
-    L.append(f"• 🏰 {pre}Immortal")
-    return box_str("👑 OWNER HELP", L)
+    pre=get_prefix(); return box_str("👑 OWNER HELP",[f"• 👑 {pre}setprefix <new>",f"• 📢 {pre}broadcast <msg>",f"• 👹 {pre}addmob @user",f"• ➕ {pre}addadmin @user",f"• 🤖 {pre}addbotadmin @user",f"• 👮 {pre}addgroupadmin @user",f"• 🛡️ {pre}kick @user",f"• 🚫 {pre}ban @user",f"• 📊 {pre}check reports"])
 def mob_help(p):
-    pre=get_prefix(); L=[]
-    L.append("• 👹 MOB MENU")
-    L.append(f"• ➕ {pre}addadmin @user")
-    L.append(f"• 🤖 {pre}addbotadmin @user")
-    L.append(f"• 👮 {pre}addgroupadmin @user")
-    L.append(f"• 🛡️ {pre}kick @user")
-    L.append(f"• 🔇 {pre}sybau @user")
-    L.append(f"• 📊 {pre}check reports")
-    return box_str("👹 MOB HELP", L)
+    pre=get_prefix(); return box_str("👹 MOB HELP",[f"• ➕ {pre}addadmin @user",f"• 🤖 {pre}addbotadmin @user",f"• 👮 {pre}addgroupadmin @user",f"• 🛡️ {pre}kick @user",f"• 📊 {pre}check reports"])
 def botadmin_help(p):
-    pre=get_prefix(); L=[]
-    L.append("• 🤖 BOT ADMIN MENU")
-    L.append(f"• 👮 {pre}addgroupadmin @user")
-    L.append(f"• 🛡️ {pre}kick @user")
-    L.append(f"• 🔇 {pre}sybau @user")
-    L.append(f"• 📊 {pre}check reports")
-    L.append(f"• ⚠️ {pre}warn @user")
-    return box_str("🤖 BOT ADMIN HELP", L)
+    pre=get_prefix(); return box_str("🤖 BOT ADMIN HELP",[f"• 👮 {pre}addgroupadmin @user",f"• 🛡️ {pre}kick @user",f"• 📊 {pre}check reports"])
 def groupadmin_help(p):
-    pre=get_prefix(); L=[]
-    L.append("• 👮 GROUP ADMIN MENU")
-    L.append(f"• 🛡️ {pre}kick @user")
-    L.append(f"• 🔇 {pre}sybau @user")
-    L.append(f"• 📣 {pre}tagall <msg>")
-    L.append(f"• 👻 {pre}hidetag <msg>")
-    L.append(f"• 🔒 {pre}close")
-    L.append(f"• 🔓 {pre}open")
-    return box_str("👮 GROUP ADMIN HELP", L)
-def process_command(sender_id, raw_text, is_group=False, group_id=None):
+    pre=get_prefix(); return box_str("👮 GROUP ADMIN HELP",[f"• 🛡️ {pre}kick @user",f"• 🔇 {pre}sybau @user",f"• 📣 {pre}tagall <msg>",f"• 🔒 {pre}close",f"• 🔓 {pre}open"])
+def process_command(sender_id,raw_text,is_group=False,group_id=None):
     if sender_id.startswith("web:"):
         name=sender_id[4:]; p=get_player_by_name(name)
-        if not p: p=get_player(sender_id, name)
-    else: p=get_player(sender_id, sender_id)
+        if not p: p=get_player(sender_id,name)
+    else: p=get_player(sender_id,sender_id)
     text=(raw_text or "").strip()
+    spawn_note=""
+    nr=maybe_spawn()
+    if nr: spawn_note=f"\n\n⚠️ WARNING! A RANDOM DUNGEON APPEARED!\n• Rank: {nr}\n• Beasts inside!\n• /dungeon gate enter to enter as group!"
     if p.get("reg_step") in ["race","class","gender"] and not text.startswith(("/",".")):
         step=p["reg_step"]
-        if step=="race" and text.lower() in RACES: p["race"]=RACES[text.lower()]["name"]; p["reg_step"]="class"; save(); return "❌ Not Done with registration\n👉 Next: Send Class"
-        if step=="class" and text.lower() in CLASSES: p["class"]=CLASSES[text.lower()]["name"]; p["reg_step"]="gender"; save(); return "❌ Not Done with registration\n👉 Next: Send Gender"
-        if step=="gender" and text.lower() in ["male","female"]: p["gender"]=text.capitalize(); p["reg_step"]="pin"; p["reg_stage"]="waiting_pin"; assign_start_moves(p); save(); return f"✅ Registration Steps Done!\n👤 {p['displayName']} | 🧬 {p['race']} | ⚔️ {p['class']} | ⚧ {p['gender']}\n🔐 Now Create 4-digit PIN"
+        if step=="race" and text.lower() in RACES: p["race"]=RACES[text.lower()]; p["reg_step"]="class"; save(); return "❌ Not Done with registration\n👉 Next: Send Class"+spawn_note
+        if step=="class" and text.lower() in CLASSES: p["class"]=CLASSES[text.lower()]; p["reg_step"]="gender"; save(); return "❌ Not Done with registration\n👉 Next: Send Gender"+spawn_note
+        if step=="gender" and text.lower() in ["male","female"]: p["gender"]=text.capitalize(); p["reg_step"]="pin"; p["reg_stage"]="waiting_pin"; assign_moves(p); save(); return f"✅ Registration Steps Done!\n👤 {p['displayName']} | 🧬 {p['race']} | ⚔️ {p['class']} | ⚧ {p['gender']}\n🔐 Now Create 4-digit PIN"+spawn_note
         return f"❌ Invalid {step}. Try again."
     if text.isdigit() and len(text)==4 and p.get("reg_stage")=="waiting_pin":
-        pending=DB.get("pending_reg",{}).get(p["id"])
-        if pending: p["password"]=text; p["registered"]=True; p["reg_stage"]="done"; p["displayName"]=pending["name"]; p["name"]=pending["name"]; apply_register_details(p, pending.get("race",""), pending.get("gender",""), pending.get("class","")); save(); return f"✅ Registration successfully done ✔\n👤 {p['displayName']}\n🔐 PIN saved!\n👉 Go back to group and continue"
+        pend=DB.get("pending_reg",{}).get(p["id"])
+        if pend: p["password"]=text; p["registered"]=True; p["reg_stage"]="done"; p["displayName"]=pend["name"]; p["name"]=pend["name"]; apply_reg(p,pend.get("race",""),pend.get("gender",""),pend.get("class","")); save(); return f"✅ Registration successfully done ✔\n👤 {p['displayName']}\n🔐 PIN saved!\n👉 Go back to group and continue"+spawn_note
         p["reg_stage"]="none"; save(); return "No pending. Type /register first."
     if text.isdigit():
-        if time.time() <= p.get("awaiting_move_until",0):
-            num=int(text); p["awaiting_move_until"]=0; return use_move_in_dungeon(p,num)
-        else: return "⏰ Time expired! Type /moves 5 now."
-    pre=get_prefix(); prefix_used=None
+        if time.time()<=p.get("awaiting_move_until",0):
+            n=int(text); p["awaiting_move_until"]=0; return use_move_dungeon(p,n)+spawn_note
+        return "⏰ Time expired! Type /moves 5 now."
+    pre=get_prefix(); pu=None
     for cand in [pre,"/","."]:
-        if text.startswith(cand): prefix_used=cand; break
-    if not prefix_used: return f"Use {pre}help"
-    stripped=text[len(prefix_used):].strip()
+        if text.startswith(cand): pu=cand; break
+    if not pu: return f"Use {pre}help"
+    stripped=text[len(pu):].strip()
     if not stripped: return f"Use {pre}help"
     parts=stripped.split(" "); cmd=parts[0].lower(); args=parts[1:]; rest=" ".join(args)
-    if cmd in ["menu","help"]: return menu_text(p)
+    if cmd in ["menu","help"]: return menu_text(p)+spawn_note
     if cmd=="ownerhelp":
         if not is_owner(p): return "❌ Owners only"
         return owner_help(p)
@@ -473,20 +307,20 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
     if cmd=="groupadminhelp":
         if not p.get("is_group_admin") and not is_owner(p): return "❌ Group Admins only"
         return groupadmin_help(p)
-    if cmd=="ping": return "🏓 Pong! ✅ Bot ON\n👑 Owners: 0779798568 / Lord Infinity / Immortal Emperor"
+    if cmd=="ping": return "🏓 Pong! ✅ Bot ON\n👑 Owners: 0779798568 / Lord Infinity / Immortal Emperor"+spawn_note
     if cmd=="setprefix":
         if not is_owner(p): return "❌ Owners only"
         if not args: return f"Use: {pre}setprefix <new> Current: {pre}"
         DB["config"]["prefix"]=args[0]; save(); return f"✅ Prefix changed to: {args[0]}"
     if cmd=="economy":
-        e=WORLD.get("economy",BOT_ECONOMY); return box_str("💰 ECONOMY",[f"• HGSS - {fmt(e.get('hgss',0))}",f"• LGSS - {fmt(e.get('lgss',0))}",f"• MGSS - {fmt(e.get('mgss',0))}",f"• Zeni - {fmt(e.get('zeni',0))}",f"• Germ - {fmt(e.get('germ',0))}",f"• Total Players - {len(DB['players'])}"])
+        e=WORLD.get("economy",BOT_ECONOMY); return box_str("💰 ECONOMY",[f"• HGSS - {fmt(e.get('hgss',0))}",f"• LGSS - {fmt(e.get('lgss',0))}",f"• MGSS - {fmt(e.get('mgss',0))}",f"• Zeni - {fmt(e.get('zeni',0))}",f"• Germ - {fmt(e.get('germ',0))}",f"• Total Players - {len(DB['players'])}"])+spawn_note
     if cmd=="info":
-        reg=sum(1 for pl in DB["players"].values() if pl.get("registered")); e=WORLD.get("economy",BOT_ECONOMY); return box_str("ℹ️ BOT INFO",[f"• Bot: INFINITY v11",f"• Owners: 0779798568 / Lord Infinity / Immortal Emperor",f"• Prefix: {pre}",f"• Registered: {reg}",f"• HGSS: {fmt(e.get('hgss',0))}",f"• LGSS: {fmt(e.get('lgss',0))}",f"• MGSS: {fmt(e.get('mgss',0))}",f"• Zeni: {fmt(e.get('zeni',0))}",f"• Backups: 3x 1TB"])
+        reg=sum(1 for x in DB["players"].values() if x.get("registered")); e=WORLD.get("economy",BOT_ECONOMY); return box_str("ℹ️ BOT INFO",[f"• Bot: INFINITY v13",f"• Owners: 0779798568 / Lord Infinity / Immortal Emperor",f"• Prefix: {pre}",f"• Registered: {reg}",f"• HGSS: {fmt(e.get('hgss',0))}",f"• LGSS: {fmt(e.get('lgss',0))}",f"• MGSS: {fmt(e.get('mgss',0))}",f"• Zeni: {fmt(e.get('zeni',0))}",f"• Backups: 3x 1TB"])+spawn_note
     if cmd=="rules": return box_str("📏 INFINITY BOT RULES",[f"• {r}" for r in BOT_RULES])
     if cmd=="welcome":
-        nm=" ".join(args).replace("@","") or p["displayName"]; return welcome_message(nm, "INFINITY Group")
+        nm=" ".join(args).replace("@","") or p["displayName"]; return welcome_message(nm,"INFINITY Group")
     if cmd=="support": return box_str("🆘 SUPPORT",["• Join support group:","• Ask in group, tag Admin","• Or DM bot with /report","• Do NOT spam mods"])
-    if cmd=="faq": return box_str("❓ FAQ",["• Q: How to register?","• A: /register Name Race Class Gender","• Q: How to get Stones?","• A: 70% from battles, 100% Zeni","• Q: How to get Supreme?","• A: Only Admins/Mobs/Owners","• Q: How to battle?","• A: /dungeon enter then /moves","• Q: How to fight Pokemon?","• A: /dungeon enter - Pokemon appears","• A: /battle then /moves"])
+    if cmd=="faq": return box_str("❓ FAQ",["• Q: How to register?","• A: /register Name Race Class Gender","• Q: How to get Stones?","• A: 70% from battles, 100% Zeni","• Q: How to get Supreme?","• A: Only Admins/Mobs/Owners","• Q: How to battle?","• A: /dungeon enter then /moves","• Q: How to fight Pokemon?","• A: /catch then /moves","• Q: How to enter Gate?","• A: /gate then /enter in 5 min"])
     if cmd=="hi": return f"👋 Hi @{p['displayName']}! Welcome to INFINITY HUNTER! Type /menu"
     if cmd=="mods": return box_str("👥 MODS",["• Owners: 0779798568","• Lord Infinity","• Immortal Emperor","• Mobs: See /mobhelp","• Bot Admins: See /botadminhelp"])
     if cmd=="rank": return box_str("🏆 RANK",[f"• Rank: {p['rank']}",f"• Level: {p['level']}",f"• EXP: {p['exp']}"])
@@ -500,16 +334,18 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
     if cmd in ["webpass","webuser","repo","card-events"]:
         if cmd=="webpass": return box_str("🔑 WEBPASS",["• Go to website","• Use your Name + PIN","• Web + WhatsApp SAME"])
         if cmd=="webuser": return f"👤 WebUser: @{p['displayName']}"
-        if cmd=="repo": return box_str("📦 REPO",["• INFINITY HUNTER v11","• Owner: 0779798568","• No script sharing - Rule 13"])
+        if cmd=="repo": return box_str("📦 REPO",["• INFINITY HUNTER v13","• Owner: 0779798568","• No script sharing - Rule 13"])
         if cmd=="card-events": return box_str("📅 CARD EVENTS",["• Daily Boss: 7-Day World Boss","• Weekly: Guild War","• Season: 30 days"])
-    if cmd=="setdesc":
-        if not is_owner(p): return "❌ Owners only"
-        return "✅ Group description set"
-    if cmd=="setrules":
-        if not is_owner(p): return "❌ Owners only"
-        return "✅ Rules updated - Use /rules"
-    if cmd in ["deaudio","facebook","gisearch","instagram","lyrics","pinterest","play","soundcloud","spotify","subreddit","tiktok","twitter","yta","yts","ytv"]:
-        return box_str("🎨 MEDIA",[f"• {cmd} received:",f"• Query: {' '.join(args)}","• Download will be sent","• No cheat - real link only"])
+    if cmd=="gate":
+        rank=rank_for_gate(p["level"]); DB.setdefault("personal_gates",{})[p["id"]]={"owner":p["id"],"owner_name":p["displayName"],"rank":rank,"expires":time.time()+300,"created":time.time()}; save()
+        return box_str("🚪 GATE SUMMONED!",[f"• Rank: {rank} (Your Rank)",f"• Owner: @{p['displayName']}",f"• Exclusively yours - No one else can enter",f"• Expires in: 5 minutes",f"• To enter: /enter",f"• If you don't enter in 5 min, it disappears!"])+spawn_note
+    if cmd=="enter":
+        gate=DB.get("personal_gates",{}).get(p["id"])
+        if not gate: return "No Gate summoned player Go sleep 😂🥱"
+        if time.time()>gate["expires"]:
+            del DB["personal_gates"][p["id"]]; save(); return "No Gate summoned player Go sleep 😂🥱"
+        rank=gate["rank"]; del DB["personal_gates"][p["id"]]; save(); return start_dungeon(p,rank=rank,is_gate=True)
+    if cmd in ["deaudio","facebook","gisearch","instagram","lyrics","pinterest","play","soundcloud","spotify","subreddit","tiktok","twitter","yta","yts","ytv"]: return box_str("🎨 MEDIA",[f"• {cmd} received:",f"• Query: {' '.join(args)}","• Download will be sent"])
     if cmd in ["banlist","chatbot","join","leave","roleslist","set-event","switch"]:
         if cmd=="banlist": return box_str("🚫 BANLIST",[f"• {x['displayName']}" for x in DB["players"].values() if x.get("banned")] or ["• No banned players"])
         if cmd=="chatbot": return f"🤖 Chatbot {args[0] if args else 'on'}"
@@ -536,23 +372,25 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
             t=get_player_by_name(" ".join(args))
             if t: t["banned"]=False; save(); return f"✅ Unbanned @{t['displayName']}"
             return "Player not found"
-        if cmd=="del-battle": DB["dungeon"]=None; save(); return "🗑️ Battle deleted"
+        if cmd=="del-battle": DB["dungeon"]=None; DB["catch_battle"]=None; save(); return "🗑️ Battle deleted"
         if cmd in ["delmod","delsudo"]:
             t=get_player_by_name(" ".join(args))
             if t: t["is_group_admin"]=False; t["is_bot_admin"]=False; save(); return f"➖ Removed @{t['displayName']}"
             return "Player not found"
+    if cmd=="catch":
+        if DB.get("catch_battle") and DB["catch_battle"].get("active"): return "⚠️ Already in catch battle! Use /moves"
+        return start_catch(p)
     if cmd in ["bag","battle","challenge","bestiary","equip","givepoke","learn","mart","mart-buy","party","pc","pokemon","spawnpokemon","start-journey","swap","t2party","t2pc","trade","trade-confirm","trade-delete","unequip","cancel-evolution"]:
-        if cmd=="bag": return box_str("🎒 BAG",[f"• Pet: {p.get('pet') or 'None'}",f"• Pokemon: {p.get('pokemon') or 'None'}",f"• Moves: {len(p.get('moves',[]))}","• Items: See /inventory"])
+        if cmd=="bag": return box_str("🎒 BAG",[f"• Pet: {p.get('pet') or 'None'}",f"• Pokemon: {p.get('pokemon') or 'None'}",f"• Moves: {len(p.get('moves',[]))}"])
         if cmd=="battle":
-            if DB.get("dungeon") and DB["dungeon"].get("in_dungeon"): return "⚔️ Already in battle! Use /moves"
-            # Battle can be Pokemon fight - start dungeon which spawns Pokemon/Boss
-            return start_dungeon(p)
+            if DB.get("catch_battle") and DB["catch_battle"].get("active"): return "⚔️ Already in catch battle! Use /moves"
+            return start_catch(p)
         if cmd=="bestiary": return box_str("📖 BESTIARY",[f"• {x}" for x in POKEMONS])
         if cmd=="mart": return box_str("🛒 MART",["• Small Heal - 1 LGSS","• Medium Heal - 3 LGSS","• MP Potion - 1 LGSS","• Phoenix Elixir - 10 LGSS"])
         if cmd=="mart-buy": return f"🛍️ Bought {' '.join(args)} from Mart"
         if cmd=="pokemon": return box_str("🐉 POKEMON",[f"• Pet: {p.get('pet') or 'None'}",f"• Pokemon: {p.get('pokemon') or 'None'}",f"• Class: {p.get('class')}"])
-        if cmd=="spawnpokemon": return f"✨ Wild {random.choice(POKEMONS)} appeared! Type /battle to fight it!"
-        if cmd=="start-journey": return "🚀 Journey started! Type /dungeon enter to fight Pokemon!"
+        if cmd=="spawnpokemon": return f"✨ Wild {random.choice(POKEMONS)} appeared! Type /catch to fight it!"
+        if cmd=="start-journey": return "🚀 Journey started! Type /catch to fight Pokemon!"
         if cmd=="trade": return f"🔄 Trade sent to {' '.join(args)} - They type /trade-confirm"
         if cmd=="trade-confirm": return "✅ Trade confirmed!"
         if cmd=="trade-delete": return "❌ Trade deleted"
@@ -562,7 +400,7 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
         if cmd=="calculator":
             try: return f"🧮 Result: {eval(' '.join(args))}"
             except: return "🧮 Invalid expression"
-        if cmd=="trivia": return box_str("❓ TRIVIA",["• Q: Who is Lord Infinity?","• A: Owner of INFINITY HUNTER","• Type /trivia again"])
+        if cmd=="trivia": return box_str("❓ TRIVIA",["• Q: Who is Lord Infinity?","• A: Owner of INFINITY HUNTER"])
         if cmd=="crypto": return box_str("🪙 CRYPTO",[f"• Coin: {' '.join(args)}","• Price: Check real exchange"])
         return box_str("🛠️ UTILS",[f"• {cmd}: {' '.join(args)}","• Done ✅"])
     if cmd in ["anime","character","diverse","foxgirl","waifu"]:
@@ -585,8 +423,7 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
             if not reps: return "📭 No reports/requests"
             lines=["📋 REPORTS / REQUESTS"]
             for r in reps: lines.append(f"• #{r['id']} [{r['type']}] {r['from']}: {r['text']} - {r['status']}")
-            lines.append(f"• Use: {pre}check report <num> approve/deny")
-            return box_str("📋 CHECK REPORTS",lines)
+            lines.append(f"• Use: {pre}check report <num> approve/deny"); return box_str("📋 CHECK REPORTS",lines)
         if args and args[0]=="report" and len(args)>=3:
             try: num=int(args[1])
             except: return "Report number must be number"
@@ -601,9 +438,9 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
         if cmd=="addmob" and not is_owner(p): return "❌ Owners only can promote Mobs"
         if cmd=="addadmin" and not (is_owner(p) or p.get("is_mob")): return "❌ Owners/Mobs only"
         if cmd=="addgroupadmin" and not (is_owner(p) or p.get("is_mob") or p.get("is_bot_admin") or p.get("is_admin")): return "❌ Staff only"
-        target_name=" ".join(args).replace("@","").strip(); t=get_player_by_name(target_name)
+        t=get_player_by_name(" ".join(args).replace("@","").strip())
         if not t: return "❌ Player not found - They must register first!"
-        role={"addbotadmin":"botadmin","addmob":"mob","addadmin":"admin","addgroupadmin":"groupadmin"}[cmd]; promote_to_monarch(t, role); role_name={"botadmin":"Bot Admin","mob":"Mob","admin":"Admin","groupadmin":"Group Admin"}[role]; return f"✅ Successfully Added\n🎉 Congratulations player @{t['displayName']} you are now a {role_name}\n👑 Class changed to Monarch - Stats + Moves match Lv{t['level']}\n📩 Check your DM for {role_name} commands!"
+        role={"addbotadmin":"botadmin","addmob":"mob","addadmin":"admin","addgroupadmin":"groupadmin"}[cmd]; promote_monarch(t,role); rn={"botadmin":"Bot Admin","mob":"Mob","admin":"Admin","groupadmin":"Group Admin"}[role]; return f"✅ Successfully Added\n🎉 Congratulations player @{t['displayName']} you are now a {rn}\n👑 Class changed to Monarch - Stats + Moves match Lv{t['level']}\n📩 Check your DM for {rn} commands!"
     if cmd=="promote":
         if not (is_owner(p) or p.get("is_mob")): return "❌ Owners/Mobs only"
         t=get_player_by_name(" ".join(args))
@@ -613,36 +450,36 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
         if not (is_owner(p) or p.get("is_mob")): return "❌ Owners/Mobs only"
         t=get_player_by_name(" ".join(args))
         if not t: return "Player not found"
-        t["is_admin"]=False; t["is_mob"]=False; t["is_bot_admin"]=False; t["class"]="Warrior"; assign_start_moves(t); save(); return f"⬇️ Demoted @{t['displayName']} - Class back to Warrior"
-    if cmd=="races": return box_str("🧬 RACES",[f"• {v['name']} - {v['ability']} - {v['desc']}" for v in RACES.values()])
-    if cmd=="classes": return box_str("⚔️ CLASSES",[f"• {v['name']} - {v['ability']} - {v['desc']}" for v in CLASSES.values()])
+        t["is_admin"]=False; t["is_mob"]=False; t["is_bot_admin"]=False; t["class"]="Warrior"; assign_moves(t); save(); return f"⬇️ Demoted @{t['displayName']} - Class back to Warrior"
+    if cmd=="races": return box_str("🧬 RACES",[f"• {RACES[k]} - {RACE_AB[RACES[k]]}" for k in RACES])
+    if cmd=="classes": return box_str("⚔️ CLASSES",[f"• {CLASSES[k]} - {CLASS_AB[CLASSES[k]]}" for k in CLASSES])
     if cmd=="stones": return box_str("💎 SPIRIT STONES", stones_lines(p)+[f"• Exchange: {pre}exchange lgss mgss 10"])
     if cmd=="exchange":
         if len(args)<3: return f"Use: {pre}exchange <from> <to> <amt>"
         try: amt=int(args[2])
         except: return "Amount must be number"
-        res=convert_stones(p, args[0].lower(), args[1].lower(), amt); save(); return res
+        r=convert_stones(p,args[0].lower(),args[1].lower(),amt); save(); return r
     if cmd=="register":
         if not args: return f"Use: {pre}register <name> <race> <class> <gender>\nExample: {pre}register Dominic GOD Warrior Male\nOr slow: {pre}register Dominic then send Race, Class, Gender"
-        race_arg=""; class_arg=""; gender_arg=""; name_parts=args[:]
-        if len(name_parts)>=1 and name_parts[-1].lower() in ["male","female"]: gender_arg=name_parts[-1]; name_parts=name_parts[:-1]
-        if len(name_parts)>=1 and name_parts[-1].lower() in CLASSES: class_arg=name_parts[-1]; name_parts=name_parts[:-1]
-        if len(name_parts)>=1 and name_parts[-1].lower() in RACES: race_arg=name_parts[-1]; name_parts=name_parts[:-1]
-        name=" ".join(name_parts)
+        ra=""; ca=""; ga=""; np=args[:]
+        if len(np)>=1 and np[-1].lower() in ["male","female"]: ga=np[-1]; np=np[:-1]
+        if len(np)>=1 and np[-1].lower() in CLASSES: ca=np[-1]; np=np[:-1]
+        if len(np)>=1 and np[-1].lower() in RACES: ra=np[-1]; np=np[:-1]
+        name=" ".join(np)
         if not name: return "Enter name!"
         if p.get("registered") and p.get("reg_stage")=="done": return f"✅ Already {p['displayName']}"
-        if not race_arg and not class_arg and not gender_arg:
+        if not ra and not ca and not ga:
             DB.setdefault("pending_reg",{})[p["id"]]={"name":name,"race":"","gender":"","class":"","group_id":group_id,"sender":sender_id}; p["displayName"]=name; p["name"]=name; p["reg_step"]="race"; p["reg_stage"]="waiting_pin"; save(); return f"👤 Name saved: {name}\n❌ Not Done with registration\n👉 Next: Send Race"
         if is_group:
-            DB.setdefault("pending_reg",{})[p["id"]]={"name":name,"race":race_arg,"gender":gender_arg,"class":class_arg,"group_id":group_id,"sender":sender_id}; p["reg_stage"]="waiting_pin"; p["displayName"]=name; p["name"]=name; apply_register_details(p, race_arg, gender_arg, class_arg); p["registered"]=False; save(); return f"✅ Registration Done ✔ Player\n👤 {name}\n📩 For the Final step please check your DM with this BOT and finish the final step"
+            DB.setdefault("pending_reg",{})[p["id"]]={"name":name,"race":ra,"gender":ga,"class":ca,"group_id":group_id,"sender":sender_id}; p["reg_stage"]="waiting_pin"; p["displayName"]=name; p["name"]=name; apply_reg(p,ra,ga,ca); p["registered"]=False; save(); return f"✅ Registration Done ✔ Player\n👤 {name}\n📩 For the Final step please check your DM with this BOT and finish the final step"
         else:
-            DB.setdefault("pending_reg",{})[p["id"]]={"name":name,"race":race_arg,"gender":gender_arg,"class":class_arg,"group_id":group_id,"sender":sender_id}; p["reg_stage"]="waiting_pin"; p["displayName"]=name; p["name"]=name; apply_register_details(p, race_arg, gender_arg, class_arg); p["registered"]=False; save(); return f"👤 Player, your registration: {pre}Register {name} {race_arg} {class_arg} {gender_arg}\n✅ Step 1 Done!\n🔐 Now Create 4-digit PIN - Type 4 numbers"
+            DB.setdefault("pending_reg",{})[p["id"]]={"name":name,"race":ra,"gender":ga,"class":ca,"group_id":group_id,"sender":sender_id}; p["reg_stage"]="waiting_pin"; p["displayName"]=name; p["name"]=name; apply_reg(p,ra,ga,ca); p["registered"]=False; save(); return f"👤 Player, your registration: {pre}Register {name} {ra} {ca} {ga}\n✅ Step 1 Done!\n🔐 Now Create 4-digit PIN - Type 4 numbers"
     if not p["registered"] and cmd not in ["register","help","menu","ping","info","economy","link","password","prefix","races","classes","ownerhelp","mobhelp","rules","welcome","support","faq","hi"]: return f"❌ Not registered. Type {pre}register <name>"
     if cmd=="profile":
         lines=[f"✨ {p['displayName']} {p['rank']}",f"👑 Title: {p.get('title','Adventurer')}",f"🧬 Race: {p.get('race','-')}",f"⚔️ Class: {p.get('class','-')}",f"⚧ Gender: {p['gender']}",f"❤️ HP {p['hp']}/{p['maxHp']}",f"🔵 MP {p['mp']}/{p['maxMp']}",f"⚔️ ATK {p['atk']}",f"🛡️ DEF {p['def']}",f"💨 SPD {p['spd']}",f"💠 Level {p['level']}",f"⚡ EXP {p['exp']}/{exp_need(p['level'])}"]; lines+=stones_lines(p); lines+=[f"🏠 House: {p['house']}",f"🚗 Car: {p.get('car')}",f"🐉 Pet: {p.get('pet') or 'None'}",f"🐉 Pokemon: {p.get('pokemon') or 'None'}",f"📝 Bio: {p.get('bio','-')}"]; return box_str("👤 PROFILE",lines)
     if cmd=="stats":
         STR=p.get("str",0)+p["atk"]//5; AGI=p.get("agi",10); INT=p.get("int",0)+p["maxMp"]//20; VIT=p.get("vit",0)+p.get("con",10); DEF=p["def"]; LUK=p.get("luk",0)+p["spd"]//3
-        lines=[f"🧩 {p['rank']}",f"💠 LV.{p['level']}",f"💎 GEMS: {p.get('gems',5)}","━━━━━━━━━━━━━━━━━━",f"💪 STR: {STR}",f"⚡ AGI: {AGI}",f"🧠 INT: {INT}",f"❤️ VIT: {VIT}",f"🛡️ DEF: {DEF}",f"🍀 LUK: {LUK}","━━━━━━━━━━━━━━━━━━",f"❤️ HP {p['hp']} / {p['maxHp']}",bar(p["hp"],p["maxHp"],22),f"⚡ XP {p['exp']} / {exp_need(p['level'])}",bar(p["exp"],exp_need(p['level']),22),"━━━━━━━━━━━━━━━━━━"]; lines+=stones_lines(p); lines+=["━━━━━━━━━━━━━━━━━━",f"🏆 Rank: {p['rank']}",f"👑 Title: {p.get('title','Adventurer')}",f"🧬 Race: {p.get('race')}",f"⚔️ Class: {p.get('class')}",f"📊 Upgrade: {pre}addstat  [amt]"]; return box_str(f"📊 {p['displayName'].upper()} — ATTRIBUTES",lines)
+        lines=[f"🧩 {p['rank']}",f"💠 LV.{p['level']}",f"💎 GEMS: {p.get('gems',5)}","━━━━━━━━━━━━━━━━━━",f"💪 STR: {STR}",f"⚡ AGI: {AGI}",f"🧠 INT: {INT}",f"❤️ VIT: {VIT}",f"🛡️ DEF: {DEF}",f"🍀 LUK: {LUK}","━━━━━━━━━━━━━━━━━━",f"❤️ HP {p['hp']} / {p['maxHp']}",bar(p["hp"],p["maxHp"],22),f"⚡ XP {p['exp']} / {exp_need(p['level'])}",bar(p["exp"],exp_need(p["level"]),22),"━━━━━━━━━━━━━━━━━━"]; lines+=stones_lines(p); lines+=["━━━━━━━━━━━━━━━━━━",f"🏆 Rank: {p['rank']}",f"👑 Title: {p.get('title','Adventurer')}",f"🧬 Race: {p.get('race')}",f"⚔️ Class: {p.get('class')}"]; return box_str(f"📊 {p['displayName'].upper()} — ATTRIBUTES",lines)
     if cmd=="wallet": return box_str("💰 WALLET", stones_lines(p))
     if cmd=="daily":
         now=time.time(); left=86400-(now-p.get("lastDaily",0))
@@ -651,8 +488,12 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
     if cmd=="claim": rew=give_reward(p,5000,5); save(); return box_str("🎁 CLAIMED",rew)
     if cmd in ["moves","move"]:
         if args:
-            try: return use_move_in_dungeon(p,args[0])
+            try: return use_move_dungeon(p,args[0])+spawn_note
             except: return "Use /moves <number>"
+        if DB.get("catch_battle") and DB["catch_battle"].get("active"):
+            moves=get_my_moves(p); lines=["🎯 CATCH BATTLE",f"• Pokemon: {DB['catch_battle']['pokemon']}",f"• Pokemon HP: {DB['catch_battle']['hp']}",f"• Your HP: {p['hp']}/{p['maxHp']}",""]
+            for i,m in enumerate(moves,1): lines.append(f"• {i}. {m}")
+            p["awaiting_move_until"]=time.time()+5; save(); return box_str("⚔️ CHOOSE MOVE - CATCH",lines)
         if not DB.get("dungeon") or not DB["dungeon"].get("in_dungeon"):
             moves=get_my_moves(p); lines=[f"{p['displayName']} Lv{p['level']}",f"🧬 {p.get('race')} | ⚔️ {p.get('class')}"]
             for i,m in enumerate(moves,1): lines.append(f"• {i}. {m}")
@@ -669,8 +510,13 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
         if args and args[0]=="enter":
             if DB.get("dungeon") and DB["dungeon"].get("in_dungeon"): return "⚠️ Already in dungeon!"
             return start_dungeon(p)
+        if args and args[0]=="gate" and len(args)>=2 and args[1]=="enter":
+            sd=WORLD.get("spawned_dungeon")
+            if not sd: return "❌ No spawned dungeon right now. Wait 15 min for next one."
+            if time.time()>sd["expires"]: WORLD["spawned_dungeon"]=None; save(); return "❌ Spawned dungeon expired. Wait 15 min."
+            return start_dungeon(p,rank=sd["rank"],is_spawned=True)
         if args and args[0]=="leave": DB["dungeon"]=None; save(); return "🚪 Left dungeon"
-        return f"Use {pre}dungeon enter"
+        return f"Use {pre}dungeon enter | {pre}dungeon gate enter"
     if cmd=="leaderboard":
         s=sorted([x for x in DB["players"].values() if x.get("registered")], key=lambda x: x.get("level",1), reverse=True)[:10]; lines=["🏆 LEADERBOARD - Web + WhatsApp SAME"]
         for i,x in enumerate(s,1): lines.append(f"• {i}. {x['displayName']} Lv{x['level']} LGSS {fmt(x.get('lgss',0))}")
@@ -678,26 +524,26 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
     if cmd=="job":
         if not args or args[0]=="list":
             lines=["💼 JOBS - Pay in Zeni + LGSS"]
-            for k,v in JOBS.items(): lines.append(f"• {k} - {fmt(v['pay_zeni'])} Zeni + {v['pay_lgss']} LGSS")
+            for k in JOBS: lines.append(f"• {k} - {fmt(JOBS[k][0])} Zeni + {JOBS[k][1]} LGSS")
             return box_str("💼 JOBS",lines)
         if args[0]=="apply": p["job"]=" ".join(args[1:]); save(); return f"💼 You are now {p['job']}"
         if args[0]=="work":
             now=time.time(); left=2*3600-(now-p.get("lastWork",0))
             if left>0: return box_str("⏳ WORK WAIT",[f"Wait {time_left(left)}"])
-            p["lastWork"]=now; j=JOBS.get(p["job"],{"pay_zeni":1000,"pay_lgss":1}); p["zeni"]+=j["pay_zeni"]; p["lgss"]=p.get("lgss",0)+j["pay_lgss"]; gain_exp(p,20); rew=give_reward(p,0,0); save(); return box_str("💼 WORK DONE",[f"• Zeni - +{fmt(j['pay_zeni'])}",f"• LGSS - +{j['pay_lgss']}"]+rew)
+            p["lastWork"]=now; j=JOBS.get(p["job"],(1000,1)); p["zeni"]+=j[0]; p["lgss"]=p.get("lgss",0)+j[1]; gain_exp(p,20); rew=give_reward(p,0,0); save(); return box_str("💼 WORK DONE",[f"• Zeni - +{fmt(j[0])}",f"• LGSS - +{j[1]}"]+rew)
         if args[0]=="info": return box_str("💼 JOB INFO",[f"• Job: {p['job']}"])
         return "Job done"
     if cmd=="pet":
         if not args or args[0]=="list":
             lines=["🐉 PETS"]
-            for k,v in PETS.items(): lines.append(f"• {k} - {v['cost_lgss']} LGSS - {v['ability']}")
+            for k in PETS: lines.append(f"• {k} - {PETS[k][0]} LGSS - {PETS[k][1]}")
             return box_str("🐉 PETS",lines)
         if args[0]=="buy":
             tn=" ".join(args[1:])
             if tn not in PETS: return "Pet not found. Type /pet list"
-            cost=PETS[tn]["cost_lgss"]
+            cost=PETS[tn][0]
             if p.get("lgss",0)<cost: return f"Need {cost} LGSS"
-            p["lgss"]-=cost; p["pet"]=tn; save(); return box_str("🐉 PET",[f"• You got {tn}",f"• Ability: {PETS[tn]['ability']}"])
+            p["lgss"]-=cost; p["pet"]=tn; save(); return box_str("🐉 PET",[f"• You got {tn}",f"• Ability: {PETS[tn][1]}"])
         if args[0]=="name": p["pet"]=" ".join(args[1:]); save(); return f"🐉 Pet named: {p['pet']}"
         if args[0]=="train": gain_exp(p,50); save(); return "🐉 Dragon trained +50 EXP"
         if args[0]=="info": return box_str("🐉 PET INFO",[f"• Pet: {p.get('pet') or 'None'}"])
@@ -719,17 +565,17 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
     if cmd=="link": return box_str("📱 WHATSAPP LINKED",["Bot linked to 0779798568"])
     if cmd=="password": return "❌ Wrong password."
     if cmd=="race":
-        if not args: return box_str("🧬 RACES",[f"• {v['name']} - {v['ability']}" for v in RACES.values()])
+        if not args: return box_str("🧬 RACES",[f"• {RACES[k]} - {RACE_AB[RACES[k]]}" for k in RACES])
         if args[0].lower()=="god" and not is_owner(p): return "God only for Owners"
-        p["race"]=RACES[args[0].lower()]["name"]; assign_start_moves(p); save(); return f"🧬 You are {p['race']}"
+        p["race"]=RACES[args[0].lower()]; assign_moves(p); save(); return f"🧬 You are {p['race']}"
     if cmd=="class":
-        if not args: return box_str("⚔️ CLASSES",[f"• {v['name']} - {v['ability']}" for v in CLASSES.values()])
-        if args[0].lower()=="monarch" and not can_see_supreme(p): return "Monarch only for appointed"
-        p["class"]=CLASSES[args[0].lower()]["name"]; assign_start_moves(p); save(); return f"⚔️ You are {p['class']}"
+        if not args: return box_str("⚔️ CLASSES",[f"• {CLASSES[k]} - {CLASS_AB[CLASSES[k]]}" for k in CLASSES])
+        if args[0].lower()=="monarch" and not can_supreme(p): return "Monarch only for appointed"
+        p["class"]=CLASSES[args[0].lower()]; assign_moves(p); save(); return f"⚔️ You are {p['class']}"
     if cmd=="gender":
         if not args or args[0].lower() not in ["male","female"]: return "Use /gender male or female"
         p["gender"]=args[0].capitalize(); save(); return f"Gender: {p['gender']}"
-    if cmd in ["labyrinth","family","families","raid","arena","worldboss","demoncastle","rebirth","guild","church","pray","kick","tagall","hidetag","close","open","sybau","unsybau","marry","divorce","spouse","house","rental","market","achievements","hunger","eat","tavern","feast","cook","quests","season","share","core","buy","bio","web","emoji","broadcast","rob","bail","breakout","wanted","hospital","immortal","skill","inventory","use","sell","go","notifications","monarchs","duel","train","gym","gate","shop","equip","unequip"]:
+    if cmd in ["labyrinth","family","families","raid","arena","worldboss","demoncastle","rebirth","guild","church","pray","kick","tagall","hidetag","close","open","sybau","unsybau","marry","divorce","spouse","house","rental","market","achievements","hunger","eat","tavern","feast","cook","quests","season","share","core","buy","bio","web","emoji","broadcast","rob","bail","breakout","wanted","hospital","immortal","skill","inventory","use","sell","go","notifications","monarchs","duel","train","gym","shop","equip","unequip"]:
         if cmd=="labyrinth" and args and args[0]=="force":
             if not is_owner(p): return "Only Owners"
             WORLD["labyrinth"]=800; save(); return "🌀 Labyrinth OPEN"
@@ -741,35 +587,34 @@ def process_command(sender_id, raw_text, is_group=False, group_id=None):
         if cmd=="skill" and args and args[0]=="cast": return f"✨ Cast {' '.join(args[1:])}"
         return f"✅ {cmd} done: {' '.join(args)}"
     return f"❌ No Such Command - Type {pre}menu"
-app = Flask(__name__)
-HTML = """<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>INFINITY HUNTER</title><style>body{background:#050510;color:#fff;font-family:Arial;margin:0}input,select{width:100%;padding:14px;margin:8px 0;background:#000;color:#fff;border:2px solid #7B2FFF;border-radius:12px;box-sizing:border-box}button{width:100%;padding:14px;background:#FFD700;color:#000;border:none;border-radius:12px;font-weight:900;margin:8px 0}button:disabled{background:#333;color:#777}.card{background:#111128;border:1px solid #333;padding:16px;border-radius:16px;margin:12px}pre{white-space:pre-wrap;background:#000;padding:12px;border-radius:10px}.hidden{display:none}</style></head><body><div id='landing' style='text-align:center;padding:60px 16px'><h1 style='color:#FFD700'>⚡ INFINITY HUNTER ⚡</h1><button onclick='showAuth()' style='max-width:300px'>ENTER →</button></div><div id='auth' class='hidden' style='text-align:center;padding:20px'><div class='card' style='max-width:460px;margin:auto;text-align:left'><h2>📝 REGISTER / 🔑 LOGIN</h2><input id='name' placeholder='Name'><input id='pass' type='password' placeholder='Enter Password'><label>🧬 Race</label><select id='race'><option value=''>-- Pick Race --</option><option value='Human'>Human - Adapt</option><option value='Demon'>Demon - Demon Rage</option><option value='Fairy'>Fairy - Fairy Heal</option><option value='Mage'>Mage - Arcane Burst</option><option value='Elf'>Elf - Elf Arrow</option><option value='Vampire'>Vampire - Blood Drain</option><option value='Dragon'>Dragon - Dragon Breath</option><option value='Angel'>Angel - Holy Light</option><option value='God'>God - Owners Only</option></select><label>⚔️ Class</label><select id='class'><option value=''>-- Pick Class --</option><option value='Warrior'>Warrior - Slash</option><option value='Mage'>Mage - Fireball</option><option value='Assassin'>Assassin - Shadow Strike</option><option value='Healer'>Healer - Heal</option><option value='Archer'>Archer - Piercing Arrow</option><option value='Tank'>Tank - Shield Wall</option><option value='Necromancer'>Necromancer - Soul Drain</option><option value='Swordmaster'>Swordmaster - Dragon Smash</option></select><label>⚧ Gender</label><select id='gender'><option value='Male'>Male</option><option value='Female'>Female</option></select><button id='regbtn' onclick='doAuth("register")' disabled>⚡ REGISTER - Pick Race + Class</button><button onclick='doAuth("login")' style='background:#7B2FFF;color:#fff'>🔑 LOGIN</button><p id='authmsg'></p></div></div><div id='dash' class='hidden'><div style='background:#111128;padding:12px;display:flex;justify-content:space-between'><b>⚡ INFINITY HUNTER - CHAT</b><span id='who'></span></div><div style='padding:12px'><div class='card'><div id='chat'></div><input id='cmd' placeholder='Type e.g. /menu /profile /stones'><button onclick='sendChat()'>▶ SEND</button></div></div></div><script>let myName='';function showAuth(){document.getElementById('landing').classList.add('hidden');document.getElementById('auth').classList.remove('hidden');}function check(){let r=document.getElementById('race').value;let c=document.getElementById('class').value;let b=document.getElementById('regbtn');if(r&&c){b.disabled=false;b.textContent='⚡ REGISTER';}else{b.disabled=true;b.textContent='⚡ REGISTER - Pick Race + Class';}}document.getElementById('race').onchange=check;document.getElementById('class').onchange=check;async function doAuth(mode){let name=document.getElementById('name').value.trim();let pass=document.getElementById('pass').value.trim();let race=document.getElementById('race').value;let cls=document.getElementById('class').value;let gender=document.getElementById('gender').value;if(!name||!pass){document.getElementById('authmsg').textContent='Enter Name + Password';return;}if(mode=='register'&&(!race||!cls)){document.getElementById('authmsg').textContent='Pick Race + Class!';return;}let r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,pass,race,class:cls,gender,mode})});let j=await r.json();document.getElementById('authmsg').textContent=j.msg;if(j.ok){myName=name;document.getElementById('auth').classList.add('hidden');document.getElementById('dash').classList.remove('hidden');document.getElementById('who').textContent='@'+name;}}async function sendChat(){let t=document.getElementById('cmd').value;if(!t)return;let d=document.createElement('div');d.textContent='You: '+t;document.getElementById('chat').appendChild(d);document.getElementById('cmd').value='';let r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:myName,text:t})});let j=await r.json();let d2=document.createElement('div');d2.textContent='Bot: '+j.reply;document.getElementById('chat').appendChild(d2);}</script></body></html>"""
+app=Flask(__name__)
+HTML="""<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>INFINITY HUNTER</title><style>body{background:#050510;color:#fff;font-family:Arial;margin:0}input,select{width:100%;padding:14px;margin:8px 0;background:#000;color:#fff;border:2px solid #7B2FFF;border-radius:12px;box-sizing:border-box}button{width:100%;padding:14px;background:#FFD700;color:#000;border:none;border-radius:12px;font-weight:900;margin:8px 0}button:disabled{background:#333;color:#777}.card{background:#111128;border:1px solid #333;padding:16px;border-radius:16px;margin:12px}pre{white-space:pre-wrap;background:#000;padding:12px;border-radius:10px}.hidden{display:none}</style></head><body><div id='landing' style='text-align:center;padding:60px 16px'><h1 style='color:#FFD700'>⚡ INFINITY HUNTER ⚡</h1><button onclick='showAuth()' style='max-width:300px'>ENTER →</button></div><div id='auth' class='hidden' style='text-align:center;padding:20px'><div class='card' style='max-width:460px;margin:auto;text-align:left'><h2>📝 REGISTER / 🔑 LOGIN</h2><input id='name' placeholder='Name'><input id='pass' type='password' placeholder='Enter Password'><label>🧬 Race</label><select id='race'><option value=''>-- Pick Race --</option><option value='Human'>Human - Adapt</option><option value='Demon'>Demon - Demon Rage</option><option value='Fairy'>Fairy - Fairy Heal</option><option value='Mage'>Mage - Arcane Burst</option><option value='Elf'>Elf - Elf Arrow</option><option value='Vampire'>Vampire - Blood Drain</option><option value='Dragon'>Dragon - Dragon Breath</option><option value='Angel'>Angel - Holy Light</option><option value='God'>God - Owners Only</option></select><label>⚔️ Class</label><select id='class'><option value=''>-- Pick Class --</option><option value='Warrior'>Warrior - Slash</option><option value='Mage'>Mage - Fireball</option><option value='Assassin'>Assassin - Shadow Strike</option><option value='Healer'>Healer - Heal</option><option value='Archer'>Archer - Piercing Arrow</option><option value='Tank'>Tank - Shield Wall</option><option value='Necromancer'>Necromancer - Soul Drain</option><option value='Swordmaster'>Swordmaster - Dragon Smash</option></select><label>⚧ Gender</label><select id='gender'><option value='Male'>Male</option><option value='Female'>Female</option></select><button id='regbtn' onclick='doAuth("register")' disabled>⚡ REGISTER - Pick Race + Class</button><button onclick='doAuth("login")' style='background:#7B2FFF;color:#fff'>🔑 LOGIN</button><p id='authmsg'></p></div></div><div id='dash' class='hidden'><div style='background:#111128;padding:12px;display:flex;justify-content:space-between'><b>⚡ INFINITY HUNTER - CHAT</b><span id='who'></span></div><div style='padding:12px'><div class='card'><div id='chat'></div><input id='cmd' placeholder='Type e.g. /menu /profile /stones'><button onclick='sendChat()'>▶ SEND</button></div></div></div><script>let myName='';function showAuth(){document.getElementById('landing').classList.add('hidden');document.getElementById('auth').classList.remove('hidden');}function check(){let r=document.getElementById('race').value;let c=document.getElementById('class').value;let b=document.getElementById('regbtn');if(r&&c){b.disabled=false;b.textContent='⚡ REGISTER';}else{b.disabled=true;b.textContent='⚡ REGISTER - Pick Race + Class';}}document.getElementById('race').onchange=check;document.getElementById('class').onchange=check;async function doAuth(mode){let name=document.getElementById('name').value.trim();let pass=document.getElementById('pass').value.trim();let race=document.getElementById('race').value;let cls=document.getElementById('class').value;let gender=document.getElementById('gender').value;if(!name||!pass){document.getElementById('authmsg').textContent='Enter Name + Password';return;}if(mode=='register'&&(!race||!cls)){document.getElementById('authmsg').textContent='Pick Race + Class!';return;}let r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,pass,race,class:cls,gender,mode})});let j=await r.json();document.getElementById('authmsg').textContent=j.msg;if(j.ok){myName=name;document.getElementById('auth').classList.add('hidden');document.getElementById('dash').classList.remove('hidden');document.getElementById('who').textContent='@'+name;}}async function sendChat(){let t=document.getElementById('cmd').value;if(!t)return;let d=document.createElement('div');d.textContent='You: '+t;document.getElementById('chat').appendChild(d);document.getElementById('cmd').value='';let r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:myName,text:t})});let j=await r.json();let d2=document.createElement('div');d2.textContent='Bot: '+j.reply;document.getElementById('chat').appendChild(d2);}</script></body></html>"""
 @app.route('/')
 def home(): return HTML
-@app.route('/api/auth', methods=['POST'])
+@app.route('/api/auth',methods=['POST'])
 def api_auth():
     data=request.json or {}; name=(data.get('name') or '').strip(); pwd=(data.get('pass') or '').strip(); race=(data.get('race') or '').strip(); cls=(data.get('class') or '').strip(); gender=(data.get('gender') or 'Male').strip(); mode=data.get('mode','register')
     if not name or not pwd: return jsonify({"ok":False,"msg":"Enter Name + Password"})
     if name.lower() in OWNER_NAMES and pwd!=OWNER_PASSWORD: return jsonify({"ok":False,"msg":"Owners: Wrong password"})
-    existing=get_player_by_name(name)
+    ex=get_player_by_name(name)
     if mode=="login":
-        if not existing or not existing.get("registered"): return jsonify({"ok":False,"msg":"Not registered. Click REGISTER"})
-        if existing.get("password") and existing.get("password")!=pwd: return jsonify({"ok":False,"msg":"Wrong password"})
+        if not ex or not ex.get("registered"): return jsonify({"ok":False,"msg":"Not registered. Click REGISTER"})
+        if ex.get("password") and ex.get("password")!=pwd: return jsonify({"ok":False,"msg":"Wrong password"})
         return jsonify({"ok":True,"msg":f"Welcome back {name}!"})
     if mode=="register" and (not race or not cls): return jsonify({"ok":False,"msg":"Pick Race + Class!"})
-    if existing and existing.get("registered"): return jsonify({"ok":True,"msg":"Already registered - Logged in!"})
-    p=get_player(f"web:{name}", name); p["password"]=pwd; p["registered"]=True; p["displayName"]=name; p["name"]=name; p["reg_stage"]="done"
-    if name.lower() in OWNER_NAMES: apply_owner_perks(p)
-    else: apply_register_details(p, race, gender, cls)
+    if ex and ex.get("registered"): return jsonify({"ok":True,"msg":"Already registered - Logged in!"})
+    p=get_player(f"web:{name}",name); p["password"]=pwd; p["registered"]=True; p["displayName"]=name; p["name"]=name; p["reg_stage"]="done"
+    if name.lower() in OWNER_NAMES: apply_owner(p)
+    else: apply_reg(p,race,gender,cls)
     save(); return jsonify({"ok":True,"msg":f"Registered {name}! Race: {p.get('race')} Class: {p.get('class')}"})
-@app.route('/api/command', methods=['POST'])
+@app.route('/api/command',methods=['POST'])
 def api_cmd():
-    data=request.json or {}; name=data.get('name','Player'); text=data.get('text','/menu')
-    reply=process_command(f"web:{name}", text, is_group=False); save(); return jsonify({"reply":reply})
-@app.route('/webhook', methods=['GET'])
+    data=request.json or {}; name=data.get('name','Player'); text=data.get('text','/menu'); reply=process_command(f"web:{name}",text,is_group=False); save(); return jsonify({"reply":reply})
+@app.route('/webhook',methods=['GET'])
 def verify():
     if request.args.get('hub.verify_token')==VERIFY_TOKEN: return request.args.get('hub.challenge','')
     return "Invalid token",403
-@app.route('/webhook', methods=['POST'])
+@app.route('/webhook',methods=['POST'])
 def webhook():
     try:
         data=request.json or {}
@@ -778,32 +623,26 @@ def webhook():
                 val=change.get('value',{})
                 for msg in val.get('messages',[]):
                     sender=msg.get('from',''); text=msg.get('text',{}).get('body','')
-                    # Welcome on join - system message contains joined/added
                     if 'joined' in text.lower() or 'added' in text.lower():
-                        nm=get_player(sender, sender).get('displayName', sender); send_whatsapp(sender, welcome_message(nm, "INFINITY Group")); continue
-                    p_tmp=get_player(sender, sender); is_group=False; group_id=None
+                        nm=get_player(sender,sender).get('displayName',sender); send_whatsapp(sender,welcome_message(nm,"INFINITY Group")); continue
+                    p_tmp=get_player(sender,sender); is_group=False; group_id=None
                     if text.lower().startswith(('/register','.register')) and p_tmp.get("reg_stage")!="waiting_pin": is_group=True; group_id="group_"+sender
                     if text.startswith('/') or text.startswith('.') or text.isdigit():
-                        reply=process_command(sender, text, is_group=is_group, group_id=group_id); save(); send_whatsapp(sender, reply)
+                        reply=process_command(sender,text,is_group=is_group,group_id=group_id); save(); send_whatsapp(sender,reply)
                         if is_group and "Registration Done" in reply:
-                            pending=DB.get("pending_reg",{}).get(sender)
-                            if pending: send_whatsapp(sender, f"👤 Player: /Register {pending['name']} {pending.get('race','')} {pending.get('class','')} {pending.get('gender','')}\n🔐 Now Create 4-digit PIN")
-                        if text.isdigit() and len(text)==4 and "Registration successfully done" in reply: send_whatsapp(sender, f"🎉 Registration Successfully Done @{p_tmp.get('displayName','Player')}\n👋 Welcome to INFINITY HUNTER @{p_tmp.get('displayName','Player')}\n👉 Now do /help")
-                        if "Successfully Added" in reply and "Bot Admin" in reply: send_whatsapp(sender, "🤖 BOT ADMIN COMMANDS:\n• /addgroupadmin @user\n• /kick @user\n• /check reports (DM only)")
-                        if "Successfully Added" in reply and "Mob" in reply: send_whatsapp(sender, "👹 MOB COMMANDS:\n• /addadmin @user\n• /addbotadmin @user\n• /check reports (DM only)")
+                            pend=DB.get("pending_reg",{}).get(sender)
+                            if pend: send_whatsapp(sender,f"👤 Player: /Register {pend['name']} {pend.get('race','')} {pend.get('class','')} {pend.get('gender','')}\n🔐 Now Create 4-digit PIN")
+                        if text.isdigit() and len(text)==4 and "Registration successfully done" in reply: send_whatsapp(sender,f"🎉 Registration Successfully Done @{p_tmp.get('displayName','Player')}\n👋 Welcome to INFINITY HUNTER @{p_tmp.get('displayName','Player')}\n👉 Now do /help")
     except Exception as e: print("Webhook error",e)
     return "OK",200
-def send_whatsapp(to, text):
+def send_whatsapp(to,text):
     if not WHATSAPP_TOKEN or not WHATSAPP_PHONE_ID: print(f"WHATSAPP TO {to}: {text}"); return
     try:
-        import urllib.request, json as js
-        url=f"https://graph.facebook.com/v18.0/{WHATSAPP_PHONE_ID}/messages"
-        payload=js.dumps({"messaging_product":"whatsapp","to":to,"type":"text","text":{"body":text[:4000]}}).encode()
-        req=urllib.request.Request(url, data=payload, headers={"Authorization":f"Bearer {WHATSAPP_TOKEN}","Content-Type":"application/json"})
-        urllib.request.urlopen(req, timeout=10)
+        import urllib.request,json as js
+        url=f"https://graph.facebook.com/v18.0/{WHATSAPP_PHONE_ID}/messages"; payload=js.dumps({"messaging_product":"whatsapp","to":to,"type":"text","text":{"body":text[:4000]}}).encode(); req=urllib.request.Request(url,data=payload,headers={"Authorization":f"Bearer {WHATSAPP_TOKEN}","Content-Type":"application/json"}); urllib.request.urlopen(req,timeout=10)
     except Exception as e: print("Send error",e)
 @app.route('/health')
-def health(): return "OK - Infinity v11 Final"
+def health(): return "OK - Infinity v13"
 if __name__=='__main__':
-    port=int(os.environ.get('PORT',10000)); print(f"INFINITY v11 LIVE on port {port}"); app.run(host='0.0.0.0', port=port)
+    port=int(os.environ.get('PORT',10000)); print(f"INFINITY v13 LIVE on port {port}"); app.run(host='0.0.0.0',port=port)
 ```
